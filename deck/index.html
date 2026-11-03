@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>包豪斯厅 · AI 演示作品 — AURA</title>
+<meta name="description" content="三维立方体翻页的演示系统：撞色几何、程序化生成的多套演示文稿。">
+<link rel="stylesheet" href="/assets/css/fonts.css">
+<link rel="stylesheet" href="/assets/css/base.css">
+<link rel="stylesheet" href="/assets/css/deck.css">
+</head>
+<body class="deck-body">
+<a class="skip" href="#stage">跳到幻灯</a>
+
+<div class="geo g-circle" aria-hidden="true"></div>
+<div class="geo g-sq" aria-hidden="true"></div>
+<div class="geo g-tri" aria-hidden="true"></div>
+<div class="geo g-bar" aria-hidden="true"></div>
+<div class="geo g-ring" aria-hidden="true"></div>
+
+<header class="deck-head">
+  <div class="dk-top">
+    <div class="dk-logo"><span class="mark"></span><span class="mark2"></span>AURA·DECK</div>
+    <nav class="dk-nav">
+      <a href="/">展馆</a><a href="#stage">演示</a><a href="#thumbs">全部幻灯</a><a href="#notes">构成</a>
+    </nav>
+    <div class="dk-count" id="deckName">AURA 展馆</div>
+  </div>
+</header>
+
+<section class="dk-hero">
+  <div class="dk-kicker">03 — Presentation System</div>
+  <h1 class="dk-title">包豪斯<span class="t2">演示</span><span class="t3">厅</span></h1>
+  <p class="dk-side">撞色、几何与三维翻页构成的演示系统。<br>三套完整演示，十八页幻灯，全部由结构化数据生成 —— 换一份数据，版式自动重排。</p>
+</section>
+
+<section class="deck-stage" id="stage">
+  <div class="stage-wrap">
+    <div class="cube-stage" id="cubeStage"></div>
+  </div>
+</section>
+
+<section class="deck-ctrl">
+  <button class="dk-btn solid" id="prevSlide">← 上一页</button>
+  <button class="dk-btn" id="nextSlide">下一页 →</button>
+  <div class="dk-pager">
+    <span id="pagerText">01 / 06</span>
+    <div class="bar"><i id="pagerFill"></i><div class="ticks"><span></span><span></span><span></span><span></span></div></div>
+    <span id="deckSub">年度成果总览</span>
+  </div>
+  <div id="deckPicker" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+</section>
+
+<section class="deck-thumbs" id="thumbs">
+  <div class="dk-thumbs-head">
+    <h3>全部幻灯</h3>
+    <span>CLICK TO JUMP · 拖拽舞台亦可翻页</span>
+  </div>
+  <div class="thumb-row"></div>
+</section>
+
+<section class="deck-notes" id="notes">
+  <div class="dn">
+    <div class="dnk">01 / Grammar</div>
+    <h4>语法先于装饰</h4>
+    <p>先定义信息层级与节奏，再让颜色进场。每个页面只有三种元素：标题、说明、装饰形状 —— 少了任何一种，画面都会失焦。</p>
+  </div>
+  <div class="dn">
+    <div class="dnk">02 / Color</div>
+    <h4>四个原色</h4>
+    <p>钴蓝承担理性，朱红负责强调，芥黄制造温度，米白留白。不使用渐变，因为渐变会让形状失去重量。</p>
+  </div>
+  <div class="dn">
+    <div class="dnk">03 / Motion</div>
+    <h4>翻页即空间</h4>
+    <p>幻灯不是切换的，而是绕着一条看不见的竖轴转过去的。观众能感到自己站在立方体的一角，而不是在看一张平面。</p>
+  </div>
+</section>
+
+<footer class="deck-foot">
+  <div class="big">DECK · BAUHAUS</div>
+  <div>MUSIC: “DECK” — 104 BPM MARIMBA BOOGIE<br><a href="/" style="color:#e04a2c">← 返回展馆</a></div>
+</footer>
+
+<button class="sound-toggle" type="button" aria-pressed="false" aria-label="切换配乐">
+  <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+  <span class="label">声音关</span>
+</button>
+
+<div class="grain" aria-hidden="true"></div>
+
+<script src="/assets/js/audio.js"></script>
+<script src="/assets/js/core.js"></script>
+<script src="/assets/js/deck.js"></script>
+</body>
+</html>
