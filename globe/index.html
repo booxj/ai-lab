@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>地球入口 · AI-LAB ATLAS</title>
+<meta name="description" content="AI-LAB ATLAS 地球入口：可旋转缩放的三维地球，按国家标注地标建筑，悬停拉近进入建筑场景。首版：巴黎圣母院。">
+<meta name="color-scheme" content="dark">
+<link rel="stylesheet" href="assets/globe.css">
+</head>
+<body>
+
+<canvas id="gl" aria-hidden="true"></canvas>
+
+<!-- 环境光罩：按时刻 / 季节 / 天气变化（纯 CSS，不改贴图） -->
+<div class="grade" id="grade" aria-hidden="true"></div>
+<div class="weather" id="weather" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="vig" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="brand">
+    <svg class="brand__mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.6"/><path d="M3.4 12h17.2M12 3.4v17.2"/><path d="M6 18.4c3.2-3.6 9-3.6 12 0" opacity=".55"/>
+    </svg>
+    <span class="brand__txt"><span class="brand__name">AI-LAB ATLAS</span><span class="brand__sub">地球入口 · GLOBE</span></span>
+  </div>
+  <div class="badges">
+    <span class="badge" id="fps">— fps</span>
+    <span class="badge badge--sim">模拟环境 · 非实时天气</span>
+    <a class="badge badge--link" href="../halls/index.html">七洲展厅</a>
+  </div>
+</header>
+
+<!-- 地标标记（DOM 投影，跟随三维坐标） -->
+<div class="pins" id="pins" aria-label="地标标记"></div>
+
+<!-- 建筑卡 -->
+<aside class="card" id="card" hidden aria-live="polite">
+  <div class="card__thumb" id="cardThumb"></div>
+  <div class="card__body">
+    <p class="card__eyebrow" id="cardGeo"></p>
+    <h1 class="card__name" id="cardName"></h1>
+    <p class="card__en" id="cardEn"></p>
+    <p class="card__blurb" id="cardBlurb"></p>
+    <p class="card__state" id="cardState"></p>
+    <a class="card__enter" id="cardEnter" href="#" hidden>进入立面 <span>→</span></a>
+  </div>
+</aside>
+
+<!-- 环境控制 -->
+<section class="env" id="env">
+  <div class="env__hd">
+    <span class="env__title">环境</span>
+    <span class="env__sim">模拟</span>
+  </div>
+  <div class="env__row">
+    <span class="env__k">时刻</span>
+    <input id="hour" class="env__range" type="range" min="0" max="23.5" step="0.5" value="17.5" aria-label="模拟时刻">
+    <span class="env__v" id="hourOut">17:30</span>
+  </div>
+  <div class="env__row">
+    <span class="env__k">季节</span>
+    <div class="chips" id="seasons" role="group" aria-label="模拟季节"></div>
+  </div>
+  <div class="env__row">
+    <span class="env__k">天气</span>
+    <div class="chips" id="weathers" role="group" aria-label="模拟天气"></div>
+  </div>
+  <div class="env__row env__row--wide">
+    <span class="env__k">时区</span>
+    <span class="env__v" id="tzOut">巴黎 · 设备时间</span>
+    <button class="env__reset" id="reset">复位</button>
+  </div>
+</section>
+
+<footer class="foot">
+  <span>拖动旋转 · 滚轮/双指缩放 · 悬停标记拉近</span>
+  <span id="texState">贴图 低清 → 高清</span>
+  <span class="foot__attr">地球贴图 NASA Blue Marble（公有领域）· 标记与光照为美术近似</span>
+</footer>
+
+<div class="loader" id="loader"><span class="loader__dot"></span><span>正在校准地球</span></div>
+<div class="nowebgl" id="nowebgl" hidden>
+  <p class="nowebgl__t">此设备未启用 WebGL</p>
+  <p class="nowebgl__d">地球需要 WebGL。可直接打开巴黎圣母院场景：<a href="notre-dame/index.html">notre-dame/index.html</a></p>
+</div>
+
+<script src="assets/landmarks.js"></script>
+<script src="assets/earth-low.js"></script>
+<script src="assets/three.min.js"></script>
+<script src="assets/globe.js"></script>
+</body>
+</html>
