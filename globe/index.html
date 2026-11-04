@@ -67,6 +67,15 @@
     <span class="env__k">天气</span>
     <div class="chips" id="weathers" role="group" aria-label="模拟天气"></div>
   </div>
+  <div class="env__row">
+    <span class="env__k">特效</span>
+    <div class="chips" id="fxModes" role="group" aria-label="特效档位"></div>
+  </div>
+  <div class="env__row env__row--seed">
+    <span class="env__k">种子</span>
+    <span class="env__v env__seed" id="seedOut">—</span>
+    <button class="env__reset" id="reseed" type="button">随机天气</button>
+  </div>
   <div class="env__row env__row--wide">
     <span class="env__k">时区</span>
     <span class="env__v" id="tzOut">巴黎 · 设备时间</span>
@@ -77,7 +86,8 @@
 <footer class="foot">
   <span>拖动旋转 · 滚轮/双指缩放 · 悬停标记拉近</span>
   <span id="texState">贴图 低清 → 高清</span>
-  <span class="foot__attr">地球贴图 NASA Blue Marble（公有领域）· 标记与光照为美术近似</span>
+  <span class="foot__fx" id="fxState">云 — · 雨 0 · 雪 0</span>
+  <span class="foot__attr">地球贴图 NASA Blue Marble（公有领域）· 云、雨雪与光照为程序化模拟，非实时气象</span>
 </footer>
 
 <div class="loader" id="loader"><span class="loader__dot"></span><span>正在校准地球</span></div>

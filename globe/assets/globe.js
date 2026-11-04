@@ -54,7 +54,8 @@
   function updateSun() {
     var lat = 48.853 * D2R;
     var decl = seasonDecl[state.season] * D2R;
-    var H = (state.hour - 12) * 15 * D2R;
+    // 页面时刻是巴黎钟表时间（含夏令时），换算成太阳时角：经度 2.35°E ≈ 0.16h，夏令时 +1h
+    var H = (state.hour - 12 - 1.15 - 2.3499 / 15) * 15 * D2R;
     var alt = Math.asin(Math.sin(lat) * Math.sin(decl) + Math.cos(lat) * Math.cos(decl) * Math.cos(H));
     var cosAz = (Math.sin(decl) - Math.sin(alt) * Math.sin(lat)) / (Math.cos(alt) * Math.cos(lat) + 1e-6);
     cosAz = Math.max(-1, Math.min(1, cosAz));
@@ -69,6 +70,7 @@
     state.sun.copy(dir);
     state.night = alt < -0.02 ? 1 : 0;
     if (dayUniforms) dayUniforms.uSun.value.copy(dir);
+    if (cloudMat) cloudMat.uniforms.uSun.value.copy(dir);
   }
 
   /* ---------------- 地球：昼夜合成着色 ---------------- */
@@ -79,7 +81,8 @@
       uNight: { value: null },
       uNightAmt: { value: 0.9 },
       uSun: { value: new THREE.Vector3(1, 0, 0) },
-      uDim: { value: 1 }
+      uDim: { value: 1 },
+      uContrast: { value: 1.0 }
     },
     vertexShader: [
       'varying vec2 vUv;',
@@ -98,6 +101,7 @@
       'uniform sampler2D uNight;',
       'uniform float uNightAmt;',
       'uniform float uDim;',
+      'uniform float uContrast;',
       'uniform vec3 uSun;',
       'varying vec2 vUv;',
       'varying vec3 vN;',
@@ -108,7 +112,9 @@
       '  float d = dot(n, sun);',
       '  float dayMix = smoothstep(-0.22, 0.26, d);',
       '  vec3 day = texture2D(uDay, vUv).rgb;',
-      '  day *= (0.26 + 1.02 * max(d, 0.0));',
+      '  float amb = 0.42 - 0.18 * uContrast;',
+      '  float gain = 0.58 + 0.28 * uContrast;',
+      '  day *= (amb + gain * max(d, 0.0));',
       '  vec3 night = texture2D(uNight, vUv).rgb;',
       '  night = pow(night, vec3(0.82)) * 1.35;',
       '  vec3 col = mix(night * uNightAmt, day, dayMix);',
@@ -397,6 +403,7 @@
       document.body.classList.remove('w-clear', 'w-cloud', 'w-rain', 'w-snow');
       if (i > 0) document.body.classList.add('w-' + WEATHERS[i][0]);
       applyWeatherDim();
+      syncFx();
     });
     weatherWrap.appendChild(b);
   });
@@ -447,6 +454,308 @@
     applyTime();
   })();
 
+  /* ---------------- 天气特效：程序化云层 + 降水粒子 ---------------- */
+  var cloudMat = null, cloudMesh = null, cloudTex = null, cloudDrift = 0;
+  var fx = {
+    mode: reduce ? 'cloud' : 'all', seed: 20261104, jitter: 0,
+    cloudTarget: 0, rainOn: false, snowOn: false, degraded: false, size: 0, noDegrade: false
+  };
+  var fxState = document.getElementById('fxState');
+  var seedOut = document.getElementById('seedOut');
+  var fxModesWrap = document.getElementById('fxModes');
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      var t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  // fbm 值噪声，横向可平铺；画进 canvas 作为云层 alpha 贴图
+  function buildCloudTexture(size, seed) {
+    var w = size, h = size >> 1;
+    var c = document.createElement('canvas'); c.width = w; c.height = h;
+    var ctx = c.getContext('2d');
+    var img = ctx.createImageData(w, h), d = img.data;
+    var rnd = mulberry32(seed ^ 0x5f3759df), oct = [];
+    for (var o = 0; o < 4; o++) {
+      var gx = 6 * (1 << o), gy = gx >> 1, g = new Float32Array(gx * gy);
+      for (var i = 0; i < g.length; i++) g[i] = rnd();
+      oct.push({ gx: gx, gy: gy, g: g });
+    }
+    function smp(o, x, y) {
+      var fx0 = x * o.gx, fy0 = y * o.gy;
+      var x0 = Math.floor(fx0), y0 = Math.floor(fy0);
+      var tx = fx0 - x0, ty = fy0 - y0;
+      var xa = ((x0 % o.gx) + o.gx) % o.gx, xb = (xa + 1) % o.gx;
+      var ya = Math.max(0, Math.min(o.gy - 1, y0)), yb = Math.min(o.gy - 1, ya + 1);
+      var u = tx * tx * (3 - 2 * tx), v = ty * ty * (3 - 2 * ty);
+      var a = o.g[ya * o.gx + xa], b = o.g[ya * o.gx + xb];
+      var cc = o.g[yb * o.gx + xa], dd = o.g[yb * o.gx + xb];
+      return (a * (1 - u) + b * u) * (1 - v) + (cc * (1 - u) + dd * u) * v;
+    }
+    for (var py = 0; py < h; py++) {
+      var ny = py / (h - 1);
+      // 极区收薄，避免等距投影在极点收拢成一圈硬扇形
+      var lat = Math.min(1, Math.sin(Math.PI * ny) * 2.4);
+      for (var px = 0; px < w; px++) {
+        var nx = px / w, v = 0, amp = 0.55, tot = 0;
+        for (var k = 0; k < 4; k++) { v += smp(oct[k], nx, ny) * amp; tot += amp; amp *= 0.52; }
+        v /= tot;
+        var a = Math.max(0, Math.min(1, (v - 0.50) / 0.22));
+        a = a * a * (3 - 2 * a) * lat;
+        var idx = (py * w + px) * 4;
+        d[idx] = 255; d[idx + 1] = 255; d[idx + 2] = 255; d[idx + 3] = a * 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    var t = new THREE.CanvasTexture(c);
+    t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.ClampToEdgeWrapping;
+    t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter;
+    return t;
+  }
+
+  function buildCloud() {
+    var size = fx.degraded ? 512 : 1024;
+    fx.size = size;
+    if (cloudTex) cloudTex.dispose();
+    cloudTex = buildCloudTexture(size, fx.seed);
+    if (!cloudMat) {
+      cloudMat = new THREE.ShaderMaterial({
+        transparent: true, depthWrite: false, side: THREE.FrontSide,
+        uniforms: {
+          uCloud: { value: cloudTex }, uTime: { value: 0 }, uDrift: { value: 0 },
+          uAmt: { value: 0 }, uDim: { value: 1 }, uSun: { value: new THREE.Vector3(1, 0, 0) }
+        },
+        vertexShader: [
+          'varying vec2 vUv; varying vec3 vN;',
+          'void main(){ vUv = uv; vN = normalize(mat3(modelMatrix) * normal);',
+          ' gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }'
+        ].join('\n'),
+        fragmentShader: [
+          'uniform sampler2D uCloud; uniform float uDrift, uAmt, uDim; uniform vec3 uSun;',
+          'varying vec2 vUv; varying vec3 vN;',
+          'void main(){',
+          ' float a1 = texture2D(uCloud, vec2(vUv.x + uDrift, vUv.y)).a;',
+          ' float a2 = texture2D(uCloud, vec2(vUv.x * 2.7 - uDrift * 1.6, vUv.y * 1.8 + 0.17)).a;',
+          ' float a = clamp(a1 * 0.95 + a2 * 0.45, 0.0, 1.0);',
+          ' a = a * a * (3.0 - 2.0 * a);',
+          ' float d = dot(normalize(vN), normalize(uSun));',
+          ' float lit = 0.34 + 0.90 * max(d, 0.0);',
+          ' vec3 col = vec3(0.94, 0.96, 1.0) * lit * uDim;',
+          ' gl_FragColor = vec4(col, a * uAmt);',
+          '}'
+        ].join('\n')
+      });
+      cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.018, 96, 60), cloudMat);
+      cloudMesh.renderOrder = 2;
+      scene.add(cloudMesh);
+    }
+    cloudMat.uniforms.uCloud.value = cloudTex;
+    updateFxState();
+  }
+
+  /* 降水：屏幕对齐的圆盘内粒子，随相机推近缩放，只在可见半球范围 */
+  var PR = 1.0;
+  var precipGroup = new THREE.Group();
+  precipGroup.position.set(0, 0, -3.0);
+  camera.add(precipGroup);
+
+  function precipMaterial(kind) {
+    return new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+      uniforms: {
+        uSize: { value: kind === 'rain' ? 0.030 : 0.011 },
+        uScale: { value: 700 }, uOpacity: { value: 0 }, uR: { value: PR },
+        uVar: { value: kind === 'rain' ? 0.22 : 1.10 }
+      },
+      vertexShader: [
+        'attribute float aPhase;',
+        'uniform float uSize, uScale, uR, uVar;',
+        'varying float vA;',
+        'void main(){',
+        ' vec3 p = position;',
+        ' float ny = (p.y + uR) / (uR * 2.0);',
+        ' float rn = length(p.xy) / uR;',
+        ' vA = smoothstep(1.0, 0.86, ny) * smoothstep(0.0, 0.16, ny) * smoothstep(1.0, 0.80, rn);',
+        ' float jit = 1.0 + uVar * (fract(aPhase * 7.13) - 0.5);',
+        ' vec4 mv = modelViewMatrix * vec4(p, 1.0);',
+        ' gl_PointSize = uSize * jit * (uScale / max(0.6, -mv.z));',
+        ' gl_Position = projectionMatrix * mv;',
+        '}'
+      ].join('\n'),
+      fragmentShader: (kind === 'rain' ? [
+        'uniform float uOpacity; varying float vA;',
+        'void main(){',
+        ' vec2 c = gl_PointCoord;',
+        ' float ax = smoothstep(0.10, 0.015, abs(c.x - 0.5));',
+        ' float ay = smoothstep(0.0, 0.12, c.y) * smoothstep(1.0, 0.80, c.y);',
+        ' float a = ax * ay * vA * uOpacity;',
+        ' if (a < 0.01) discard;',
+        ' gl_FragColor = vec4(vec3(0.80, 0.88, 1.0), a);',
+        '}'
+      ] : [
+        'uniform float uOpacity; varying float vA;',
+        'void main(){',
+        ' float d = length(gl_PointCoord - vec2(0.5));',
+        ' float a = smoothstep(0.5, 0.06, d) * vA * uOpacity;',
+        ' if (a < 0.01) discard;',
+        ' gl_FragColor = vec4(vec3(0.92, 0.96, 1.0), a);',
+        '}'
+      ]).join('\n')
+    });
+  }
+
+  function buildPrecip(kind, max) {
+    var pos = new Float32Array(max * 3), ph = new Float32Array(max), sp = new Float32Array(max);
+    var rr = mulberry32(fx.seed ^ (kind === 'rain' ? 0x1234 : 0xabcd));
+    for (var i = 0; i < max; i++) {
+      var rad = PR * Math.sqrt(rr()), ang = rr() * Math.PI * 2;
+      pos[i * 3] = Math.cos(ang) * rad;
+      pos[i * 3 + 1] = rr() * PR * 2 - PR;
+      pos[i * 3 + 2] = 0;
+      ph[i] = rr() * Math.PI * 2;
+      sp[i] = kind === 'rain' ? 1.5 + rr() * 0.95 : 0.16 + rr() * 0.14;
+    }
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('aPhase', new THREE.BufferAttribute(ph, 1));
+    geo.setDrawRange(0, 0);
+    var pts = new THREE.Points(geo, precipMaterial(kind));
+    pts.frustumCulled = false; pts.renderOrder = 7; pts.visible = false;
+    precipGroup.add(pts);
+    return { kind: kind, pts: pts, geo: geo, mat: pts.material, pos: pos, ph: ph, sp: sp,
+             max: max, count: 0, rr: mulberry32(fx.seed ^ (kind === 'rain' ? 0x9e37 : 0x77)) };
+  }
+  var rainSys = buildPrecip('rain', 1200);
+  var snowSys = buildPrecip('snow', 620);
+
+  function applyCounts() {
+    var q = fx.degraded ? 0.58 : 1;
+    var mobile = window.innerWidth <= 700 ? 0.72 : 1;
+    rainSys.count = Math.round(rainSys.max * q * mobile);
+    snowSys.count = Math.round(snowSys.max * q * mobile);
+    rainSys.geo.setDrawRange(0, rainSys.count);
+    snowSys.geo.setDrawRange(0, snowSys.count);
+    updateFxState();
+  }
+
+  function stepPrecip(sys, dt, now, on) {
+    var u = sys.mat.uniforms;
+    var target = on ? (sys.kind === 'rain' ? 0.72 : 0.58) : 0;
+    u.uOpacity.value += (target - u.uOpacity.value) * Math.min(1, dt / 220);
+    if (u.uOpacity.value < 0.02 && !on) { sys.pts.visible = false; return; }
+    if (on) sys.pts.visible = true;
+    var p = sys.pos, n = sys.count, R = PR, wob = dt / 1000;
+    for (var i = 0; i < n; i++) {
+      var iy = i * 3 + 1;
+      p[iy] -= sys.sp[i] * wob;
+      if (p[iy] < -R) {
+        p[iy] = R;
+        p[i * 3] = (sys.rr() * 2 - 1) * R;
+        p[i * 3 + 2] = 0;
+      }
+      if (sys.kind === 'snow') p[i * 3] += Math.sin(now * 0.0008 + sys.ph[i]) * 0.0016 * (dt / 16.7);
+    }
+    sys.geo.attributes.position.needsUpdate = true;
+  }
+
+  function applyWeatherChips(i) {
+    Array.prototype.forEach.call(weatherWrap.children, function (c, j) { c.classList.toggle('is-on', j === i); });
+    document.body.classList.remove('w-clear', 'w-cloud', 'w-rain', 'w-snow');
+    if (i > 0) document.body.classList.add('w-' + WEATHERS[i][0]);
+  }
+
+  function syncFx() {
+    var cover = [0.18, 0.62, 0.72, 0.60][state.weather] + fx.jitter;
+    fx.cloudTarget = fx.mode === 'none' ? 0 : Math.min(0.55, Math.max(0.10, cover));
+    fx.rainOn = fx.mode === 'all' && state.weather === 2;
+    fx.snowOn = fx.mode === 'all' && state.weather === 3;
+    if (cloudMesh) cloudMesh.visible = fx.mode !== 'none';
+    updateFxState();
+  }
+
+  function rollWeather(nextSeed) {
+    if (nextSeed !== undefined) fx.seed = nextSeed >>> 0;
+    var rnd = mulberry32(fx.seed);
+    fx.jitter = (rnd() - 0.5) * 0.14;
+    var night = state.hour < 5 || state.hour >= 21;
+    var dawn = state.hour >= 5 && state.hour < 8;
+    var snowP = (state.season === 3 ? 0.28 : state.season === 0 ? 0.10 : 0.02) + (dawn ? 0.06 : 0);
+    var rainP = (night ? 0.38 : 0.20) + (state.season === 2 ? 0.07 : 0);
+    var r = rnd(), i;
+    if (r < snowP) i = 3;
+    else if (r < snowP + rainP) i = 2;
+    else if (r < snowP + rainP + 0.28) i = 1;
+    else i = 0;
+    state.weather = i;
+    applyWeatherChips(i);
+    applyWeatherDim();
+    buildCloud();
+    syncFx();
+  }
+
+  function updateFxState() {
+    if (seedOut) seedOut.textContent = '种子 ' + (fx.seed >>> 0).toString(16).slice(0, 6);
+    if (!fxState) return;
+    fxState.textContent = '云 ' + (fx.size ? fx.size + '×' + (fx.size >> 1) : '—') +
+      ' · 雨 ' + rainSys.count + ' · 雪 ' + snowSys.count + (fx.degraded ? ' · 降级' : '');
+  }
+
+  /* 每帧推进：云层自转/漂移/透明度渐变，降水粒子下落与淡入淡出 */
+  function updateFx(dt, now) {
+    if (!cloudMat) return;
+    var cu = cloudMat.uniforms;
+    var target = cloudMesh.visible ? fx.cloudTarget : 0;
+    if (reduce) {
+      cu.uAmt.value = target;
+    } else {
+      cu.uAmt.value += (target - cu.uAmt.value) * Math.min(1, dt / 820);
+      cloudDrift += dt * 0.000009;
+      cloudMesh.rotation.y += dt * 0.0000022;
+    }
+    cu.uDrift.value = cloudDrift;
+
+    // 点精灵按画布物理高度换算，保证 CSS 像素下粒子大小稳定
+    var px = size.h * size.dpr / (2 * Math.tan(curFov * D2R / 2));
+    rainSys.mat.uniforms.uScale.value = px;
+    snowSys.mat.uniforms.uScale.value = px;
+    // 圆盘半径跟随当前缩放，降水只在球体附近，不铺满全屏
+    precipGroup.scale.setScalar(3.45 / Math.max(1.1, curR));
+    stepPrecip(rainSys, dt, now, fx.rainOn && !reduce);
+    stepPrecip(snowSys, dt, now, fx.snowOn && !reduce);
+  }
+
+  function degradeFx() {
+    if (fx.degraded) return;
+    fx.degraded = true;
+    buildCloud();
+    applyCounts();
+  }
+
+  var FXMODES = [['none', '无'], ['cloud', '仅云'], ['all', '全部']];
+  FXMODES.forEach(function (m, i) {
+    var b = document.createElement('button');
+    b.className = 'chip' + ((fx.mode === m[0]) ? ' is-on' : '');
+    b.type = 'button'; b.textContent = m[1];
+    b.addEventListener('click', function () {
+      fx.mode = m[0];
+      Array.prototype.forEach.call(fxModesWrap.children, function (c, j) { c.classList.toggle('is-on', j === i); });
+      syncFx();
+    });
+    fxModesWrap.appendChild(b);
+  });
+
+  var reseedBtn = document.getElementById('reseed');
+  if (reseedBtn) reseedBtn.addEventListener('click', function () {
+    rollWeather((fx.seed ^ 0x9e3779b9) >>> 0);
+  });
+
+  applyCounts();
+  rollWeather(fx.seed);
+
   document.getElementById('reset').addEventListener('click', function () {
     blur();
     var s = sphericalFromVec(anchor);
@@ -467,6 +776,7 @@
     camera.updateProjectionMatrix();
     fitR = fitRadius();
     if (!focused) { target.r = fitR; }
+    applyCounts();
   }
   window.addEventListener('resize', resize);
   resize();
@@ -498,8 +808,8 @@
     if (acc > 500) {
       fpsAvg = frames * 1000 / acc;
       fpsEl.textContent = Math.round(fpsAvg) + ' fps';
-      if (!reduce && frames > 8) {
-        if (fpsAvg < 34 && quality === 1) { quality = 0.72; resize(); }
+      if (!reduce && !fx.noDegrade && frames > 8) {
+        if (fpsAvg < 34 && quality === 1) { quality = 0.72; resize(); degradeFx(); }
       }
       acc = 0; frames = 0;
     }
@@ -519,7 +829,7 @@
     }
 
     applyCamera();
-    if (earthMat.uniforms.uSun.value) { /* 已在 updateSun 更新 */ }
+    updateFx(dt, now);
     renderer.render(scene, camera);
     projectPins();
     requestAnimationFrame(tick);
@@ -542,6 +852,27 @@
     },
     blur: blur,
     state: state,
-    info: function () { return { fps: Math.round(fpsAvg), quality: quality, dpr: size.dpr, w: size.w, h: size.h, hiLoaded: hiLoaded, nightLoaded: nightLoaded, tex: texState.textContent }; }
+    fx: fx,
+    setHour: function (h) {
+      state.hour = Math.max(0, Math.min(23.5, h));
+      hourEl.value = state.hour;
+      applyTime();
+    },
+    setWeather: function (i) { state.weather = i; applyWeatherChips(i); applyWeatherDim(); syncFx(); },
+    setFxMode: function (m) { fx.mode = m; syncFx(); },
+    setSeed: function (n) { rollWeather((n >>> 0)); },
+    // 自动化截图用：关掉自动降级，便于核对未降级时的云层分辨率
+    lockQuality: function (on) { fx.noDegrade = !!on; },
+    setLight: function (c) { earthMat.uniforms.uContrast.value = Math.max(0.5, Math.min(1.8, c)); },
+    info: function () {
+      return {
+        fps: Math.round(fpsAvg), quality: quality, dpr: size.dpr, w: size.w, h: size.h,
+        hiLoaded: hiLoaded, nightLoaded: nightLoaded, tex: texState.textContent,
+        fxMode: fx.mode, seed: fx.seed, cloudAmt: cloudMat ? +cloudMat.uniforms.uAmt.value.toFixed(2) : 0,
+        cloudSize: fx.size, rainOn: fx.rainOn, snowOn: fx.snowOn, degraded: fx.degraded,
+        rain: rainSys.count, snow: snowSys.count, contrast: earthMat.uniforms.uContrast.value,
+        sun: [state.sun.x.toFixed(2), state.sun.y.toFixed(2), state.sun.z.toFixed(2)]
+      };
+    }
   };
 })();
