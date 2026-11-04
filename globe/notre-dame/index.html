@@ -112,7 +112,7 @@
           <rect x="820" y="268" width="200" height="590"/>
           <rect x="700" y="300" width="120" height="558"/>
           <path d="M760 150 L772 300 H748 Z"/>
-          <path d="M1020 470 L1140 560 V852 H1020 Z"/>
+          <path d="M1020 470 L1220 604 V852 H1020 Z"/>
         </clipPath>
 
         <!-- 王廊小龛 -->
@@ -173,19 +173,21 @@
           <rect x="754" y="214" width="12" height="4" fill="#b59a76" opacity=".8"/>
         </g>
 
-        <!-- 右翼透视：退去的侧墙 + 四道扶壁墩 -->
+        <!-- 右翼透视：退去的侧墙 + 扶壁墩列 -->
         <g class="flank">
-          <path d="M1020 470 L1140 560 V852 H1020 Z" fill="url(#stoneDark)"/>
-          <path d="M1020 474 L1140 564" stroke="#d8bd97" stroke-opacity=".5" stroke-width="2"/>
-          <path d="M1020 560 L1140 636 V852 H1020 Z" fill="#15161c" opacity=".55"/>
+          <path d="M1020 470 L1220 604 V852 H1020 Z" fill="url(#stoneDark)"/>
+          <path d="M1020 474 L1220 608" stroke="#d8bd97" stroke-opacity=".5" stroke-width="2"/>
+          <path d="M1020 560 L1220 680 V852 H1020 Z" fill="#15161c" opacity=".55"/>
           <g stroke="#0a0a0e" stroke-opacity=".38" stroke-width="1">
-            <path d="M1020 690 L1140 752"/><path d="M1020 780 L1140 830"/>
+            <path d="M1020 690 L1220 770"/><path d="M1020 780 L1220 840"/>
           </g>
           <g transform="translate(1042 852)"><use href="#pierB"/></g>
           <g transform="translate(1074 852) scale(.94)"><use href="#pierB"/></g>
           <g transform="translate(1104 852) scale(.86)"><use href="#pierB"/></g>
           <g transform="translate(1128 852) scale(.76)"><use href="#pierB"/></g>
-          <path d="M1020 640 h120 v12 h-120 Z" fill="#0e0e13" opacity=".4"/>
+          <g transform="translate(1152 852) scale(.66)"><use href="#pierB"/></g>
+          <g transform="translate(1176 852) scale(.56)"><use href="#pierB"/></g>
+          <path d="M1020 640 h200 v12 h-200 Z" fill="#0e0e13" opacity=".4"/>
         </g>
 
         <!-- 双塔 -->
@@ -370,9 +372,9 @@
 
         <!-- 受光 / 背光：整栋的两层光 -->
         <g clip-path="url(#facadeClip)">
-          <rect class="ao" x="480" y="690" width="680" height="170" fill="url(#aoBase)"/>
-          <rect class="light" x="480" y="140" width="680" height="720" fill="url(#lightWarm)"/>
-          <rect class="shade" x="480" y="140" width="680" height="720" fill="url(#shadeCool)"/>
+          <rect class="ao" x="480" y="690" width="760" height="170" fill="url(#aoBase)"/>
+          <rect class="light" x="480" y="140" width="760" height="720" fill="url(#lightWarm)"/>
+          <rect class="shade" x="480" y="140" width="760" height="720" fill="url(#shadeCool)"/>
         </g>
       </g>
 
