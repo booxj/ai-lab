@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>巴黎圣母院 · 西立面（自绘版）— AI-LAB ATLAS</title>
+<meta name="description" content="巴黎圣母院西立面：可切换时刻、季节与模拟天气的分层绘景；四处建筑部位各藏一处能力标记（影像 / 网页 / 幻灯片 / 游戏）。">
+<meta name="color-scheme" content="dark">
+<link rel="stylesheet" href="nd.css">
+</head>
+<body class="t-dusk w-clear s-autumn">
+
+<div class="frame" id="frame">
+  <div class="rays" aria-hidden="true"></div>
+  <div class="fog" aria-hidden="true"></div>
+  <div class="wet" aria-hidden="true"></div>
+  <div class="motes" id="motes" aria-hidden="true"></div>
+
+  <div class="stage">
+    <svg class="wing" id="wing" viewBox="0 0 1200 900" preserveAspectRatio="xMidYMax meet" role="img"
+         aria-label="巴黎圣母院西立面分层绘景（自绘兜底版）">
+      <defs>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#0d1220"/>
+          <stop offset=".38" stop-color="#2c2436"/>
+          <stop offset=".72" stop-color="#7a4b45"/>
+          <stop offset=".92" stop-color="#d99b6c"/>
+          <stop offset="1" stop-color="#f0c69b"/>
+        </linearGradient>
+        <radialGradient id="sunGrad">
+          <stop offset="0" stop-color="#ffe6bd" stop-opacity=".65"/>
+          <stop offset=".38" stop-color="#ffb877" stop-opacity=".22"/>
+          <stop offset="1" stop-color="#ff9a5c" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="stoneH" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#d8b993"/>
+          <stop offset=".26" stop-color="#ad9a80"/>
+          <stop offset=".62" stop-color="#7a6f62"/>
+          <stop offset=".86" stop-color="#4a4440"/>
+          <stop offset="1" stop-color="#2a2729"/>
+        </linearGradient>
+        <linearGradient id="stoneHL" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#e6c69a"/>
+          <stop offset=".5" stop-color="#bda883"/>
+          <stop offset="1" stop-color="#6d6255"/>
+        </linearGradient>
+        <linearGradient id="stoneV" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#c9b190"/>
+          <stop offset=".3" stop-color="#a2907a"/>
+          <stop offset=".72" stop-color="#6b6258"/>
+          <stop offset="1" stop-color="#3a3634"/>
+        </linearGradient>
+        <linearGradient id="stoneDark" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#5a5249"/>
+          <stop offset="1" stop-color="#15151a"/>
+        </linearGradient>
+        <linearGradient id="recess" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#0a090d"/>
+          <stop offset=".55" stop-color="#171519"/>
+          <stop offset="1" stop-color="#2b2620"/>
+        </linearGradient>
+        <linearGradient id="cornice" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#e6cba4"/>
+          <stop offset=".42" stop-color="#b09a7c"/>
+          <stop offset="1" stop-color="#4a433c"/>
+        </linearGradient>
+        <linearGradient id="castShadow" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#000" stop-opacity=".55"/>
+          <stop offset="1" stop-color="#000" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="lightWarm" x1=".1" y1="1" x2=".9" y2=".1">
+          <stop offset="0" stop-color="#ffca8a" stop-opacity=".55"/>
+          <stop offset=".45" stop-color="#ffb072" stop-opacity=".22"/>
+          <stop offset="1" stop-color="#ff9a5c" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="shadeCool" x1="0" y1="0" x2="1" y2=".2">
+          <stop offset="0" stop-color="#05060c" stop-opacity="0"/>
+          <stop offset=".7" stop-color="#05060c" stop-opacity=".28"/>
+          <stop offset="1" stop-color="#05060c" stop-opacity=".5"/>
+        </linearGradient>
+        <linearGradient id="aoBase" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#05060a" stop-opacity="0"/>
+          <stop offset="1" stop-color="#05060a" stop-opacity=".46"/>
+        </linearGradient>
+        <radialGradient id="glass">
+          <stop offset="0" stop-color="#ffd49a" stop-opacity=".95"/>
+          <stop offset=".26" stop-color="#d98f75" stop-opacity=".8"/>
+          <stop offset=".55" stop-color="#7a4a72" stop-opacity=".85"/>
+          <stop offset=".78" stop-color="#2e3f6b" stop-opacity=".9"/>
+          <stop offset="1" stop-color="#101a30" stop-opacity=".96"/>
+        </radialGradient>
+        <radialGradient id="hotGrad">
+          <stop offset="0" stop-color="#ffd9a8" stop-opacity=".9"/>
+          <stop offset="1" stop-color="#ffd9a8" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="hazeGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#d9b48c" stop-opacity="0"/>
+          <stop offset="1" stop-color="#d9b48c" stop-opacity=".55"/>
+        </linearGradient>
+        <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#2b313c"/>
+          <stop offset="1" stop-color="#14161c"/>
+        </linearGradient>
+        <radialGradient id="cloudFade">
+          <stop offset="0" stop-color="#ffd9b4" stop-opacity=".9"/>
+          <stop offset=".55" stop-color="#f0c8a4" stop-opacity=".34"/>
+          <stop offset="1" stop-color="#e8b894" stop-opacity="0"/>
+        </radialGradient>
+
+        <clipPath id="facadeClip">
+          <rect x="500" y="268" width="200" height="590"/>
+          <rect x="820" y="268" width="200" height="590"/>
+          <rect x="700" y="300" width="120" height="558"/>
+          <path d="M760 150 L772 300 H748 Z"/>
+          <path d="M1020 470 L1220 604 V852 H1020 Z"/>
+        </clipPath>
+
+        <!-- 王廊小龛 -->
+        <g id="niche">
+          <path d="M-8 0 V-20 C-8 -30 -3 -37 0 -41 C3 -37 8 -30 8 -20 V0 Z" fill="url(#recess)"/>
+          <path d="M-8 0 V-20 C-8 -30 -3 -37 0 -41 C3 -37 8 -30 8 -20 V0" fill="none" stroke="#bfa27c" stroke-opacity=".3" stroke-width="1.2"/>
+          <path d="M-2.6 -14 h5.2 l1.4 14 h-8 Z" fill="#a08b6d" opacity=".55"/>
+          <circle cy="-25" r="3.4" fill="#9b8768" opacity=".6"/>
+        </g>
+
+        <!-- 飞扶壁墩：墩身 + 尖顶小塔 + 弧撑 -->
+        <g id="pierB">
+          <path d="M-10 0 V-212 l10 -26 l10 26 V0 Z" fill="url(#stoneV)"/>
+          <path d="M-10 0 V-212 l10 -26 l10 26 V0" fill="none" stroke="#14131a" stroke-opacity=".55" stroke-width="1.6"/>
+          <path d="M-6 0 V-212 l6 -16" fill="none" stroke="#efd7ad" stroke-opacity=".32" stroke-width="2"/>
+          <path d="M-5 -238 l5 -30 l5 30 Z" fill="#c9ae86"/>
+          <path d="M0 -212 C22 -206 40 -186 54 -164" fill="none" stroke="#6f6656" stroke-width="8" stroke-opacity=".8"/>
+          <path d="M0 -212 C22 -206 40 -186 54 -164" fill="none" stroke="#d3b993" stroke-width="2.2" stroke-opacity=".32"/>
+        </g>
+
+        <!-- 尖窗：双叶 + 圆窗 -->
+        <g id="lancet">
+          <path d="M-22 0 V-96 C-22 -120 -12 -134 0 -140 C12 -134 22 -120 22 -96 V0 Z" fill="url(#recess)"/>
+          <path d="M-22 0 V-96 C-22 -120 -12 -134 0 -140 C12 -134 22 -120 22 -96 V0" fill="none" stroke="#c2a87f" stroke-opacity=".34" stroke-width="2"/>
+          <path d="M-13 0 V-92 C-13 -110 -7 -120 0 -126" fill="none" stroke="#c2a87f" stroke-opacity=".28" stroke-width="2"/>
+          <path d="M13 0 V-92 C13 -110 7 -120 0 -126" fill="none" stroke="#c2a87f" stroke-opacity=".28" stroke-width="2"/>
+          <circle cx="0" cy="-104" r="7" fill="none" stroke="#c2a87f" stroke-opacity=".3" stroke-width="1.6"/>
+        </g>
+      </defs>
+
+      <!-- 天：向画框外延展，避免两侧出现竖直接缝 -->
+      <rect class="sky" x="-260" y="0" width="1720" height="900" fill="url(#skyGrad)"/>
+      <ellipse class="sun-glow" id="sunGlow" cx="900" cy="300" rx="420" ry="270" fill="url(#sunGrad)"/>
+      <g class="stars" opacity=".5">
+        <circle cx="150" cy="90" r="1.4" fill="#dfe6f2" opacity=".5"/><circle cx="420" cy="60" r="1.1" fill="#dfe6f2" opacity=".35"/>
+        <circle cx="640" cy="110" r="1.2" fill="#dfe6f2" opacity=".4"/><circle cx="980" cy="70" r="1.5" fill="#dfe6f2" opacity=".45"/>
+        <circle cx="1110" cy="160" r="1" fill="#dfe6f2" opacity=".3"/>
+      </g>
+      <circle class="moon" cx="214" cy="140" r="11" fill="#e2e8f2" opacity=".55"/>
+      <!-- 高空薄云：径向渐变自散 -->
+      <g class="clouds">
+        <ellipse cx="300" cy="250" rx="300" ry="34" fill="url(#cloudFade)"/>
+        <ellipse cx="880" cy="206" rx="340" ry="40" fill="url(#cloudFade)"/>
+        <ellipse cx="620" cy="318" rx="240" ry="24" fill="url(#cloudFade)"/>
+      </g>
+      <!-- 圣母院 -->
+      <g class="nd" id="nd">
+        <!-- 屋面与后殿体量 -->
+        <path d="M700 336 L760 300 L820 336 V430 H700 Z" fill="url(#roof)" opacity=".9"/>
+        <path d="M1020 468 L1140 556 L1140 600 H1020 Z" fill="#1b1e26" opacity=".7"/>
+        <g class="spire">
+          <path d="M760 336 L760 214 L757 196 L760 158 L763 196 L760 214" fill="url(#stoneV)"/>
+          <path d="M748 336 L760 236 L772 336 Z" fill="#2a2c34" opacity=".8"/>
+          <g fill="#c0a580" opacity=".85">
+            <path d="M752 236 l4 -14 l4 14 z"/><path d="M764 236 l4 -14 l4 14 z"/>
+            <path d="M756 268 l3 -10 l3 10 z"/><path d="M762 268 l3 -10 l3 10 z"/>
+          </g>
+          <rect x="754" y="214" width="12" height="4" fill="#b59a76" opacity=".8"/>
+        </g>
+
+        <!-- 右翼透视：退去的侧墙 + 扶壁墩列 -->
+        <g class="flank">
+          <path d="M1020 470 L1220 604 V852 H1020 Z" fill="url(#stoneDark)"/>
+          <path d="M1020 474 L1220 608" stroke="#d8bd97" stroke-opacity=".5" stroke-width="2"/>
+          <path d="M1020 560 L1220 680 V852 H1020 Z" fill="#15161c" opacity=".55"/>
+          <g stroke="#0a0a0e" stroke-opacity=".38" stroke-width="1">
+            <path d="M1020 690 L1220 770"/><path d="M1020 780 L1220 840"/>
+          </g>
+          <g transform="translate(1042 852)"><use href="#pierB"/></g>
+          <g transform="translate(1074 852) scale(.94)"><use href="#pierB"/></g>
+          <g transform="translate(1104 852) scale(.86)"><use href="#pierB"/></g>
+          <g transform="translate(1128 852) scale(.76)"><use href="#pierB"/></g>
+          <g transform="translate(1152 852) scale(.66)"><use href="#pierB"/></g>
+          <g transform="translate(1176 852) scale(.56)"><use href="#pierB"/></g>
+          <path d="M1020 640 h200 v12 h-200 Z" fill="#0e0e13" opacity=".4"/>
+        </g>
+
+        <!-- 双塔 -->
+        <g class="towers">
+          <g>
+            <rect x="500" y="300" width="200" height="552" fill="url(#stoneH)"/>
+            <rect x="820" y="300" width="200" height="552" fill="url(#stoneH)"/>
+          </g>
+          <!-- 外墩与内墩：左右各有受光面与阴影面 -->
+          <g>
+            <rect x="500" y="300" width="18" height="552" fill="url(#stoneHL)"/>
+            <rect x="682" y="300" width="18" height="552" fill="#241f1d" opacity=".55"/>
+            <rect x="820" y="300" width="18" height="552" fill="url(#stoneHL)"/>
+            <rect x="1002" y="300" width="18" height="552" fill="#241f1d" opacity=".55"/>
+            <rect x="514" y="300" width="3" height="552" fill="#fff" opacity=".12"/>
+            <rect x="834" y="300" width="3" height="552" fill="#fff" opacity=".12"/>
+          </g>
+          <!-- 塔顶檐口、栏杆 -->
+          <g>
+            <rect x="494" y="286" width="212" height="16" fill="url(#cornice)"/>
+            <rect x="814" y="286" width="212" height="16" fill="url(#cornice)"/>
+            <rect x="494" y="284" width="212" height="3" fill="#f2dcb8" opacity=".55"/>
+            <rect x="814" y="284" width="212" height="3" fill="#f2dcb8" opacity=".55"/>
+            <rect x="494" y="302" width="212" height="16" fill="url(#castShadow)"/>
+            <rect x="814" y="302" width="212" height="16" fill="url(#castShadow)"/>
+            <g fill="#3a332d">
+              <rect x="498" y="262" width="204" height="24"/>
+              <rect x="818" y="262" width="204" height="24"/>
+            </g>
+            <g fill="#a8906d">
+              <path d="M502 262 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v-14 h10 v24"/>
+              <path d="M822 262 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v14 h10 v-14 h6 v-14 h10 v24"/>
+            </g>
+          </g>
+          <!-- 钟楼双尖窗 -->
+          <g transform="translate(560 470) scale(1.05)"><use href="#lancet"/></g>
+          <g transform="translate(624 470) scale(1.05)"><use href="#lancet"/></g>
+          <g transform="translate(880 470) scale(1.05)"><use href="#lancet"/></g>
+          <g transform="translate(944 470) scale(1.05)"><use href="#lancet"/></g>
+          <!-- 中层尖窗 -->
+          <g transform="translate(560 655) scale(.9)"><use href="#lancet"/></g>
+          <g transform="translate(628 655) scale(.9)"><use href="#lancet"/></g>
+          <g transform="translate(880 655) scale(.9)"><use href="#lancet"/></g>
+          <g transform="translate(948 655) scale(.9)"><use href="#lancet"/></g>
+          <!-- 塔基盲龛（让开两侧门洞） -->
+          <g>
+            <use href="#niche" x="524" y="820"/>
+            <use href="#niche" x="552" y="820"/>
+            <use href="#niche" x="580" y="820"/>
+            <use href="#niche" x="914" y="820"/>
+            <use href="#niche" x="942" y="820"/>
+            <use href="#niche" x="970" y="820"/>
+            <use href="#niche" x="996" y="820"/>
+          </g>
+          <!-- 层间线脚 -->
+          <g class="courses" fill="none">
+            <rect x="500" y="500" width="200" height="5" fill="url(#cornice)"/>
+            <rect x="820" y="500" width="200" height="5" fill="url(#cornice)"/>
+            <rect x="500" y="690" width="200" height="6" fill="url(#cornice)"/>
+            <rect x="820" y="690" width="200" height="6" fill="url(#cornice)"/>
+            <rect x="500" y="505" width="200" height="10" fill="url(#castShadow)" opacity=".55"/>
+            <rect x="820" y="505" width="200" height="10" fill="url(#castShadow)" opacity=".55"/>
+            <rect x="500" y="696" width="200" height="12" fill="url(#castShadow)" opacity=".5"/>
+            <rect x="820" y="696" width="200" height="12" fill="url(#castShadow)" opacity=".5"/>
+          </g>
+        </g>
+
+        <!-- 中央：大画廊 / 玫瑰窗 / 王廊 / 三连拱 -->
+        <g class="central">
+          <g>
+            <rect x="700" y="336" width="120" height="516" fill="url(#stoneV)"/>
+          </g>
+          <!-- 上层大画廊 -->
+          <rect x="700" y="336" width="120" height="34" fill="#1a181d" opacity=".72"/>
+          <g fill="url(#recess)">
+            <path d="M708 370 V352 C708 344 712 338 718 338 C724 338 728 344 728 352 V370 Z"/>
+            <path d="M732 370 V352 C732 344 736 338 742 338 C748 338 752 344 752 352 V370 Z"/>
+            <path d="M756 370 V352 C756 344 760 338 766 338 C772 338 776 344 776 352 V370 Z"/>
+            <path d="M780 370 V352 C780 344 784 338 790 338 C796 338 800 344 800 352 V370 Z"/>
+            <path d="M804 370 V352 C804 344 808 338 814 338 C820 338 824 344 824 352 V370 Z"/>
+          </g>
+          <rect x="700" y="370" width="120" height="3" fill="#d9bf95" opacity=".5"/>
+          <!-- 玫瑰窗：凹进的方框 + 深影 -->
+          <rect x="700" y="392" width="120" height="140" fill="url(#cornice)"/>
+          <rect x="706" y="398" width="108" height="128" fill="url(#recess)"/>
+          <rect x="712" y="404" width="96" height="116" fill="#0a090d"/>
+          <circle class="rose-glass" cx="760" cy="462" r="56" fill="url(#glass)"/>
+          <circle cx="760" cy="462" r="56" fill="none" stroke="#0a090d" stroke-width="3" opacity=".55"/>
+          <g class="rose-tracery" stroke="#e2bd8c" stroke-opacity=".6" fill="none">
+            <circle cx="760" cy="462" r="56" stroke-width="2.2" stroke-opacity=".75"/>
+            <circle cx="760" cy="462" r="47" stroke-width="1.5"/>
+            <circle cx="760" cy="462" r="24" stroke-width="2.2"/>
+            <g stroke-width="1.2">
+              <path d="M760 462 V406 M760 462 V518 M760 462 H704 M760 462 H816"/>
+              <g transform="rotate(30 760 462)"><path d="M760 462 V406 M760 462 V518"/></g>
+              <g transform="rotate(60 760 462)"><path d="M760 462 V406 M760 462 V518"/></g>
+              <g transform="rotate(120 760 462)"><path d="M760 462 V406 M760 462 V518"/></g>
+              <g transform="rotate(150 760 462)"><path d="M760 462 V406 M760 462 V518"/></g>
+            </g>
+            <g stroke-width="1.1">
+              <circle cx="760" cy="440" r="9"/><circle cx="760" cy="484" r="9"/>
+              <circle cx="738" cy="462" r="9"/><circle cx="782" cy="462" r="9"/>
+              <circle cx="744" cy="446" r="9"/><circle cx="776" cy="446" r="9"/>
+              <circle cx="744" cy="478" r="9"/><circle cx="776" cy="478" r="9"/>
+              <circle cx="760" cy="428" r="5"/><circle cx="760" cy="496" r="5"/>
+              <circle cx="726" cy="462" r="5"/><circle cx="794" cy="462" r="5"/>
+            </g>
+            <circle cx="760" cy="462" r="12" stroke-width="2.4"/>
+          </g>
+          <!-- 玫瑰窗余光 -->
+          <circle class="rose-glow" cx="760" cy="462" r="74" fill="url(#sunGrad)" opacity=".16"/>
+          <rect x="700" y="532" width="120" height="10" fill="url(#castShadow)" opacity=".6"/>
+          <!-- 王廊 -->
+          <rect x="700" y="546" width="120" height="66" fill="#191720" opacity=".8"/>
+          <g>
+            <use href="#niche" x="714" y="608"/><use href="#niche" x="732" y="608"/>
+            <use href="#niche" x="750" y="608"/><use href="#niche" x="768" y="608"/>
+            <use href="#niche" x="786" y="608"/><use href="#niche" x="804" y="608"/>
+          </g>
+          <rect x="700" y="612" width="120" height="8" fill="url(#castShadow)" opacity=".65"/>
+
+          <!-- 三连拱：中央门（四重拱环 + 门楣浮雕 + 双扇） -->
+          <g class="portals">
+            <rect x="610" y="846" width="296" height="7" fill="#1b1922"/>
+
+            <!-- 中央门 -->
+            <path d="M700 852 V744 C700 692 726 662 760 662 C794 662 820 692 820 744 V852 Z" fill="url(#stoneH)"/>
+            <path d="M708 852 V748 C708 700 730 672 760 672 C790 672 812 700 812 748 V852 Z" fill="url(#stoneHL)"/>
+            <path d="M716 852 V752 C716 708 734 682 760 682 C786 682 804 708 804 752 V852 Z" fill="#463d33"/>
+            <path d="M722 852 V756 C722 716 738 692 760 692 C782 692 798 716 798 756 V852 Z" fill="#2b2623"/>
+            <path d="M728 852 V760 C728 724 742 700 760 700 C778 700 792 724 792 760 V852 Z" fill="#0b0a0d"/>
+            <!-- 门楣（tympanum）浮雕 -->
+            <path d="M728 760 C728 724 742 700 760 700 C778 700 792 724 792 760 Z" fill="#151019"/>
+            <g fill="none" stroke="#b08f63" stroke-opacity=".5" stroke-width="1.8">
+              <path d="M731 748 C737 718 748 707 760 707 C772 707 783 718 789 748"/>
+              <path d="M736 756 C741 730 750 720 760 720 C770 720 779 730 784 756"/>
+            </g>
+            <g fill="#b39168" opacity=".55">
+              <circle cx="760" cy="716" r="5.4"/>
+              <circle cx="745" cy="729" r="4"/><circle cx="775" cy="729" r="4"/>
+              <circle cx="737" cy="743" r="3.6"/><circle cx="783" cy="743" r="3.6"/><circle cx="760" cy="736" r="3.6"/>
+              <rect x="730" y="756" width="60" height="3"/>
+            </g>
+            <!-- 门扇与正中门柱 -->
+            <rect x="734" y="766" width="23" height="86" fill="#131118"/>
+            <rect x="763" y="766" width="23" height="86" fill="#131118"/>
+            <rect x="756" y="760" width="8" height="92" fill="url(#stoneHL)"/>
+            <g fill="none" stroke="#8a7454" stroke-opacity=".32" stroke-width=".9">
+              <path d="M735 800 q11 -9 21 0"/><path d="M764 800 q11 -9 21 0"/>
+              <path d="M735 828 q11 -9 21 0"/><path d="M764 828 q11 -9 21 0"/>
+            </g>
+            <!-- 门间扶壁 -->
+            <rect x="692" y="712" width="10" height="140" fill="url(#stoneHL)"/>
+            <rect x="818" y="712" width="10" height="140" fill="url(#stoneHL)"/>
+            <rect x="697" y="712" width="2" height="140" fill="#fff" opacity=".12"/>
+            <rect x="823" y="712" width="2" height="140" fill="#fff" opacity=".12"/>
+
+            <!-- 北侧门 -->
+            <g>
+              <path d="M620 852 V780 C620 744 634 718 658 718 C682 718 696 744 696 780 V852 Z" fill="url(#stoneH)"/>
+              <path d="M626 852 V782 C626 750 638 726 658 726 C678 726 690 748 690 782 V852 Z" fill="url(#stoneHL)"/>
+              <path d="M634 852 V784 C634 758 644 736 658 736 C672 736 682 758 682 784 V852 Z" fill="#0c0b0f"/>
+              <rect x="638" y="794" width="17" height="58" fill="#15131a"/>
+              <rect x="661" y="794" width="17" height="58" fill="#15131a"/>
+              <rect x="656" y="790" width="4" height="62" fill="url(#stoneHL)"/>
+              <path d="M620 852 V780 C620 744 634 718 658 718" fill="none" stroke="#caa879" stroke-opacity=".34" stroke-width="1.3"/>
+              <path d="M696 852 V780 C696 744 682 718 658 718" fill="none" stroke="#caa879" stroke-opacity=".34" stroke-width="1.3"/>
+            </g>
+            <!-- 南侧门 -->
+            <g>
+              <path d="M826 852 V780 C826 744 840 718 864 718 C888 718 902 744 902 780 V852 Z" fill="url(#stoneH)"/>
+              <path d="M832 852 V782 C832 750 844 726 864 726 C884 726 896 748 896 782 V852 Z" fill="url(#stoneHL)"/>
+              <path d="M838 852 V784 C838 758 848 736 864 736 C880 736 890 758 890 784 V852 Z" fill="#0c0b0f"/>
+              <rect x="844" y="794" width="17" height="58" fill="#15131a"/>
+              <rect x="867" y="794" width="17" height="58" fill="#15131a"/>
+              <rect x="862" y="790" width="4" height="62" fill="url(#stoneHL)"/>
+              <path d="M826 852 V780 C826 744 840 718 864 718" fill="none" stroke="#caa879" stroke-opacity=".34" stroke-width="1.3"/>
+              <path d="M902 852 V780 C902 744 888 718 864 718" fill="none" stroke="#caa879" stroke-opacity=".34" stroke-width="1.3"/>
+            </g>
+          </g>
+        </g>
+
+        <!-- 受光 / 背光：整栋的两层光 -->
+        <g clip-path="url(#facadeClip)">
+          <rect class="ao" x="480" y="690" width="760" height="170" fill="url(#aoBase)"/>
+          <rect class="light" x="480" y="140" width="760" height="720" fill="url(#lightWarm)"/>
+          <rect class="shade" x="480" y="140" width="760" height="720" fill="url(#shadeCool)"/>
+        </g>
+      </g>
+
+      <!-- 前景：广场、石栏、行人 -->
+      <g class="foreground">
+        <path d="M-260 852 H1460 V900 H-260 Z" fill="#100f14"/>
+        <g stroke="#3a352f" stroke-opacity=".5" stroke-width="1">
+          <path d="M-260 858 H1460"/><path d="M-260 866 H1460"/><path d="M-260 876 H1460"/>
+        </g>
+        <path d="M-260 900 V884 H1460 V900 Z" fill="#07070b"/>
+        <!-- 视角线 -->
+        <g stroke="#5c5142" stroke-opacity=".22" stroke-width="1">
+          <path d="M470 900 L600 852"/><path d="M1120 900 L1000 852"/><path d="M760 900 L780 852"/>
+        </g>
+        <!-- 行人：尺度参照 -->
+        <g fill="#0a0910" opacity=".92">
+          <path d="M566 848 m0 -22 c3 0 4 3 3 6 l2 6 l3 8 h-3 l-3 -6 l-1 8 h-3 l-1 -8 l-3 6 h-3 l3 -8 l2 -6 c-1 -3 0 -6 3 -6 Z"/>
+          <path d="M596 848 m0 -26 c3 0 4 3 3 7 l2 7 l3 9 h-3 l-3 -7 l-1 9 h-3 l-1 -9 l-3 7 h-3 l3 -9 l2 -7 c-1 -4 0 -7 3 -7 Z"/>
+          <path d="M616 848 m0 -19 c3 0 4 2 3 5 l2 5 l2 7 h-2 l-3 -5 l-1 7 h-3 l-1 -7 l-2 5 h-2 l2 -7 l2 -5 c-1 -3 0 -5 3 -5 Z"/>
+        </g>
+        <!-- 左缘低石栏：只压画面一角，不侵入题签 -->
+        <g fill="#0b0a10" opacity=".55">
+          <rect x="-260" y="836" width="300" height="18"/>
+          <rect x="30" y="806" width="8" height="46"/>
+        </g>
+      </g>
+
+      <!-- 雾 -->
+      <g class="haze">
+        <ellipse cx="760" cy="868" rx="620" ry="56" fill="url(#hazeGrad)" opacity=".5"/>
+      </g>
+
+      <!-- 四处部位标记：常驻、低调、随明暗取反 -->
+      <g class="marks" id="marks">
+        <g class="mark" data-k="video" tabindex="0" role="button" aria-label="影像 · HTML 短片">
+          <ellipse class="hot" cx="760" cy="806" rx="76" ry="54"/>
+          <rect class="hit" x="706" y="778" width="108" height="56"/>
+          <text x="760" y="810">影像</text>
+        </g>
+        <g class="mark" data-k="web" tabindex="0" role="button" aria-label="网页 · 单页作品">
+          <ellipse class="hot" cx="760" cy="538" rx="86" ry="44"/>
+          <rect class="hit" x="706" y="516" width="108" height="44"/>
+          <text x="760" y="542">网页</text>
+        </g>
+        <g class="mark" data-k="deck" tabindex="0" role="button" aria-label="幻灯片 · HTML PPT">
+          <ellipse class="hot" cx="568" cy="800" rx="66" ry="58"/>
+          <rect class="hit" x="520" y="774" width="96" height="54"/>
+          <text x="568" y="804">幻灯片</text>
+        </g>
+        <g class="mark" data-k="game" tabindex="0" role="button" aria-label="游戏 · 小型可玩场景">
+          <ellipse class="hot" cx="1078" cy="706" rx="68" ry="62"/>
+          <rect class="hit" x="1034" y="678" width="88" height="58"/>
+          <text x="1078" y="710">游戏</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="snowfall" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="vig" aria-hidden="true"></div>
+</div>
+
+<header class="top">
+  <a class="crumb" href="../index.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M3.4 12h17.2M12 3.4v17.2"/></svg>
+    <span>AI-LAB ATLAS<span class="crumb__sub">地球 · 巴黎</span></span>
+  </a>
+  <div class="badges">
+    <span class="badge" id="clockOut">巴黎 —:—</span>
+    <span class="badge badge--sim" id="simBadge">模拟环境 · 非实时天气</span>
+    <a class="badge badge--link" href="../halls/eu/index.html">哥特厅</a>
+  </div>
+</header>
+
+<section class="env" id="env">
+  <div class="env__row">
+    <span class="env__k">时刻</span>
+    <input id="hour" class="env__range" type="range" min="0" max="23.5" step="0.5" value="17.5" aria-label="模拟时刻">
+    <span class="env__v" id="hourOut">17:30</span>
+  </div>
+  <div class="env__row">
+    <span class="env__k">季节</span>
+    <div class="chips" id="seasons" role="group" aria-label="模拟季节"></div>
+  </div>
+  <div class="env__row">
+    <span class="env__k">天气</span>
+    <div class="chips" id="weathers" role="group" aria-label="模拟天气"></div>
+  </div>
+</section>
+
+<div class="title" id="title">
+  <p class="title__eyebrow">FRANCE · PARIS · ÎLE DE LA CITÉ</p>
+  <h1 class="title__cn">巴黎圣母院</h1>
+  <p class="title__en">CATHÉDRALE NOTRE-DAME DE PARIS</p>
+  <p class="title__meta">西立面 · 1163–1345 · 哥特盛期<br>自绘分层示意 · 非实拍</p>
+</div>
+
+<div class="note">
+  <span>四类能力各藏于一处石作</span>
+  <span class="note__dim">时刻 / 季节 / 天气为模拟，非实时</span>
+</div>
+
+<aside class="sheet" id="sheet" hidden aria-live="polite">
+  <button class="sheet__close" id="sheetClose" aria-label="返回立面">×</button>
+  <p class="sheet__k" id="sheetK"></p>
+  <h2 class="sheet__h" id="sheetH"></h2>
+  <p class="sheet__en" id="sheetEn"></p>
+  <p class="sheet__d" id="sheetD"></p>
+  <p class="sheet__case" id="sheetCase"></p>
+  <a class="sheet__go" id="sheetGo" href="../halls/eu/index.html">同语义四门 · 哥特厅 <span>→</span></a>
+  <p class="sheet__foot">作品位：results/&lt;model-slug&gt;/&lt;case-id&gt;/v01/</p>
+</aside>
+
+<div class="loader" id="loader"><span></span>正在铺开画面</div>
+
+<script src="nd.js"></script>
+<!-- 自绘兜底版：实拍样张见 index.html -->
+</body>
+</html>
