@@ -34,6 +34,7 @@
   var seasonDecl = [-14, 0, 23.2, -6]; // 春 / 夏 / 秋 / 冬（近似赤纬）
   var state = {
     hour: 17.5, season: 1, weather: 0, night: 0,
+    timeMode: 'real',          // real：按 UTC 推太阳直射点；manual：按滑杆的巴黎钟表时间
     sun: new THREE.Vector3(1, 0, 0),
     dim: 1
   };
@@ -51,29 +52,58 @@
   // 以巴黎为画面中心，让欧非大陆正对镜头
   var anchor = v3(48.853, 2.3499, 1).normalize();
 
+  // 太阳直射点：赤纬 + 时差 + 小时角，输入 UTC 时刻
+  function solarEq(now) {
+    var y = now.getUTCFullYear();
+    var dayMs = Date.UTC(y, now.getUTCMonth(), now.getUTCDate()) - Date.UTC(y, 0, 1);
+    var N = dayMs / 86400000 + 1;
+    var g = 2 * Math.PI / 365 * (N - 1);
+    var decl = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g)
+      - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g)
+      - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g); // 弧度
+    var eq = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g)
+      - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g)); // 分钟
+    return { decl: decl / D2R, eq: eq };
+  }
+
+  function subsolar(now) {
+    var s = solarEq(now);
+    var utcH = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
+    var lon = -15 * (utcH + s.eq / 60 - 12);
+    lon = ((lon + 540) % 360) - 180;
+    return { lat: s.decl, lon: lon };
+  }
+
+  // 巴黎夏令时：4–10 月 +2，其余 +1（只用于把滑杆上的巴黎钟表时间换算成 UTC）
+  var parisOffset = (function () { var m = new Date().getUTCMonth(); return (m >= 3 && m <= 9) ? 2 : 1; })();
+
+  function sunDirFor(lat, lon) {
+    return v3(lat, lon, 1).normalize();
+  }
+
   function updateSun() {
-    var lat = 48.853 * D2R;
-    var decl = seasonDecl[state.season] * D2R;
-    // 页面时刻是巴黎钟表时间（含夏令时），换算成太阳时角：经度 2.35°E ≈ 0.16h，夏令时 +1h
-    var H = (state.hour - 12 - 1.15 - 2.3499 / 15) * 15 * D2R;
-    var alt = Math.asin(Math.sin(lat) * Math.sin(decl) + Math.cos(lat) * Math.cos(decl) * Math.cos(H));
-    var cosAz = (Math.sin(decl) - Math.sin(alt) * Math.sin(lat)) / (Math.cos(alt) * Math.cos(lat) + 1e-6);
-    cosAz = Math.max(-1, Math.min(1, cosAz));
-    var az = H > 0 ? (2 * Math.PI - Math.acos(cosAz)) : Math.acos(cosAz);
-    var up = anchor.clone();
-    var north = new THREE.Vector3(0, 1, 0).sub(up.clone().multiplyScalar(up.y)).normalize();
-    var east = new THREE.Vector3().crossVectors(north, up).normalize();
-    var dir = up.multiplyScalar(Math.sin(alt))
-      .add(north.multiplyScalar(Math.cos(alt) * Math.cos(az)))
-      .add(east.multiplyScalar(Math.cos(alt) * Math.sin(az)))
-      .normalize();
+    var decl, lon;
+    if (state.timeMode === 'real') {
+      var s = subsolar(new Date());
+      decl = s.lat; lon = s.lon;
+    } else {
+      // 手动时刻：滑杆是巴黎钟表时间 → 换算 UTC 后求直射经度；赤纬按季节档位
+      var utcH = Math.max(-6, Math.min(30, state.hour - parisOffset));
+      lon = -15 * (utcH + solarEq(new Date()).eq / 60 - 12);
+      lon = ((lon + 540) % 360) - 180;
+      decl = seasonDecl[state.season];
+    }
+    var dir = sunDirFor(decl, lon);
+    state.sunLat = decl; state.sunLon = lon;
+    state.night = dir.dot(anchor) < 0 ? 1 : 0;
     state.sun.copy(dir);
-    state.night = alt < -0.02 ? 1 : 0;
     if (dayUniforms) dayUniforms.uSun.value.copy(dir);
     if (cloudMat) cloudMat.uniforms.uSun.value.copy(dir);
   }
 
   /* ---------------- 地球：昼夜合成着色 ---------------- */
+  var blankTex = new THREE.DataTexture(new Uint8Array([0, 0, 0, 0]), 1, 1);
+  blankTex.needsUpdate = true;
   var dayUniforms = null;
   var earthMat = new THREE.ShaderMaterial({
     uniforms: {
@@ -82,7 +112,10 @@
       uNightAmt: { value: 0.9 },
       uSun: { value: new THREE.Vector3(1, 0, 0) },
       uDim: { value: 1 },
-      uContrast: { value: 1.0 }
+      uContrast: { value: 1.0 },
+      uCloudTex: { value: blankTex },
+      uCloudAmt: { value: 0 },
+      uCloudDrift: { value: 0 }
     },
     vertexShader: [
       'varying vec2 vUv;',
@@ -99,6 +132,8 @@
     fragmentShader: [
       'uniform sampler2D uDay;',
       'uniform sampler2D uNight;',
+      'uniform sampler2D uCloudTex;',
+      'uniform float uCloudAmt, uCloudDrift;',
       'uniform float uNightAmt;',
       'uniform float uDim;',
       'uniform float uContrast;',
@@ -110,19 +145,26 @@
       '  vec3 n = normalize(vN);',
       '  vec3 sun = normalize(uSun);',
       '  float d = dot(n, sun);',
-      '  float dayMix = smoothstep(-0.22, 0.26, d);',
+      // 晨昏线：一条宽约 ±18° 的柔化过渡，不做硬边
+      '  float dayMix = smoothstep(-0.30, 0.16, d);',
       '  vec3 day = texture2D(uDay, vUv).rgb;',
-      '  float amb = 0.42 - 0.18 * uContrast;',
-      '  float gain = 0.58 + 0.28 * uContrast;',
-      '  day *= (amb + gain * max(d, 0.0));',
+      // 云影：淡压受光面的海陆，不压夜面灯光
+      '  float cl = texture2D(uCloudTex, vec2(vUv.x + uCloudDrift, vUv.y)).a;',
+      '  cl = clamp(cl * uCloudAmt * 2.0, 0.0, 1.0);',
+      '  float shade = 1.0 - 0.30 * cl * cl * smoothstep(0.0, 0.45, d);',
+      '  float amb = 0.40 - 0.16 * uContrast;',
+      '  float gain = 0.56 + 0.30 * uContrast;',
+      // 受光面增益留余量，避免整球提亮 / 过曝
+      '  day *= (amb + gain * max(d, 0.0) * shade);',
       '  vec3 night = texture2D(uNight, vUv).rgb;',
-      '  night = pow(night, vec3(0.82)) * 1.35;',
+      '  night = pow(night, vec3(0.86)) * 1.25;',
       '  vec3 col = mix(night * uNightAmt, day, dayMix);',
-      '  float term = smoothstep(0.36, 0.0, abs(d - 0.015));',
-      '  col += vec3(1.0, 0.52, 0.24) * term * 0.085;',
+      // 过渡带偏暖：只在晨昏线附近叠一层橙红，不铺整球
+      '  float band = smoothstep(0.30, 0.0, abs(d));',
+      '  col += vec3(1.0, 0.44, 0.18) * band * band * 0.10;',
       '  vec3 vd = normalize(cameraPosition - vP);',
       '  float fres = pow(1.0 - clamp(dot(n, vd), 0.0, 1.0), 3.0);',
-      '  col += vec3(0.30, 0.46, 0.68) * fres * (0.52 * dayMix + 0.10);',
+      '  col += vec3(0.30, 0.46, 0.68) * fres * (0.48 * dayMix + 0.08);',
       '  gl_FragColor = vec4(col * uDim, 1.0);',
       '}'
     ].join('\n')
@@ -277,6 +319,7 @@
   var cardEn = document.getElementById('cardEn');
   var cardBlurb = document.getElementById('cardBlurb');
   var cardState = document.getElementById('cardState');
+  var cardCredit = document.getElementById('cardCredit');
   var cardEnter = document.getElementById('cardEnter');
   var hoverTimer = null;
 
@@ -294,11 +337,19 @@
     target.r = fitR * 0.75;
     target.fov = 29;
 
-    cardThumb.innerHTML = THUMBS[item.thumb] || THUMBS['notre-dame'];
+    cardThumb.innerHTML = item.photo
+      ? '<img src="' + item.photo + '" alt="' + item.name + ' 实拍照片" decoding="async">'
+      : (THUMBS[item.thumb] || THUMBS['notre-dame']);
     cardGeo.textContent = item.countryEn + ' / ' + item.cityEn;
     cardName.textContent = item.name;
     cardEn.textContent = item.nameEn;
     cardBlurb.textContent = item.blurb;
+    if (cardCredit) {
+      cardCredit.textContent = item.photoCredit || '';
+      cardCredit.hidden = !item.photoCredit;
+    }
+    // 卡片打开时收起环境面板，避免两个浮层互压
+    if (typeof setPanel === 'function') setPanel(false);
     if (item.status === 'open') {
       cardState.textContent = '已建成 · 场景可进入';
       cardEnter.hidden = false;
@@ -433,6 +484,11 @@
   }
 
   hourEl.addEventListener('input', function () {
+    // 拖动即视为手动模式，页面明确标注「模拟」
+    if (state.timeMode !== 'manual') {
+      state.timeMode = 'manual';
+      applyTimeMode();
+    }
     state.hour = parseFloat(hourEl.value);
     applyTime();
   });
@@ -463,9 +519,10 @@
 
   /* ---------------- 天气特效：程序化云层 + 降水粒子 ---------------- */
   var cloudMat = null, cloudMesh = null, cloudTex = null, cloudDrift = 0;
+  var cloudAlpha = null, cloudAW = 0, cloudAH = 0;
   var fx = {
     mode: reduce ? 'cloud' : 'all', seed: 20261104, jitter: 0,
-    cloudTarget: 0, rainOn: false, snowOn: false, degraded: false, size: 0, noDegrade: false
+    cloudTarget: 0, rainOn: false, snowOn: false, degrade: 0, size: 0, noDegrade: false
   };
   var fxState = document.getElementById('fxState');
   var seedOut = document.getElementById('seedOut');
@@ -518,6 +575,9 @@
       }
     }
     ctx.putImageData(img, 0, 0);
+    cloudAW = w; cloudAH = h;
+    cloudAlpha = new Float32Array(w * h);
+    for (var q = 0; q < w * h; q++) cloudAlpha[q] = d[q * 4 + 3] / 255;
     var t = new THREE.CanvasTexture(c);
     t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.ClampToEdgeWrapping;
     t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter;
@@ -525,7 +585,8 @@
   }
 
   function buildCloud() {
-    var size = fx.degraded ? 512 : 1024;
+    var base = window.innerWidth <= 700 ? 768 : 1024;
+    var size = fx.degrade >= 2 ? 512 : fx.degrade >= 1 ? Math.min(base, 768) : base;
     fx.size = size;
     if (cloudTex) cloudTex.dispose();
     cloudTex = buildCloudTexture(size, fx.seed);
@@ -545,14 +606,24 @@
           'uniform sampler2D uCloud; uniform float uDrift, uAmt, uDim; uniform vec3 uSun;',
           'varying vec2 vUv; varying vec3 vN;',
           'void main(){',
+          // 三层不同尺度：大尺度天气系统 + 中尺度云团 + 高频碎边
           ' float a1 = texture2D(uCloud, vec2(vUv.x + uDrift, vUv.y)).a;',
           ' float a2 = texture2D(uCloud, vec2(vUv.x * 2.7 - uDrift * 1.6, vUv.y * 1.8 + 0.17)).a;',
-          ' float a = clamp(a1 * 0.95 + a2 * 0.45, 0.0, 1.0);',
-          ' a = a * a * (3.0 - 2.0 * a);',
+          ' float a3 = texture2D(uCloud, vec2(vUv.x * 5.6 + uDrift * 2.4, vUv.y * 3.6 - 0.11)).a;',
+          ' float base = a1 * 0.74 + a2 * 0.42 + a3 * 0.24;',
+          // 高频层当侵蚀：让边缘碎裂，不是均匀白雾
+          ' float ero = a3 * 0.62 + a2 * 0.24;',
+          ' float a = base * (0.52 + 0.78 * ero);',
+          ' a = clamp(a, 0.0, 1.0); a = a * a * (3.0 - 2.0 * a);',
+          // 厚薄差异：厚处实、薄处透，云顶亮、云底暗
+          ' float core = smoothstep(0.42, 0.94, a);',
           ' float d = dot(normalize(vN), normalize(uSun));',
-          ' float lit = 0.34 + 0.90 * max(d, 0.0);',
-          ' vec3 col = vec3(0.94, 0.96, 1.0) * lit * uDim;',
-          ' gl_FragColor = vec4(col, a * uAmt);',
+          ' float lit = 0.20 + 1.02 * max(d, 0.0) * mix(0.80, 1.05, core);',
+          ' lit *= mix(0.58, 1.0, core);',
+          // 夜面云只留微弱轮廓
+          ' float dayMask = smoothstep(-0.20, 0.22, d);',
+          ' vec3 col = vec3(0.93, 0.96, 1.0) * lit * uDim;',
+          ' gl_FragColor = vec4(col, a * uAmt * mix(0.50, 1.0, dayMask));',
           '}'
         ].join('\n')
       });
@@ -561,112 +632,355 @@
       scene.add(cloudMesh);
     }
     cloudMat.uniforms.uCloud.value = cloudTex;
+    if (earthMat) earthMat.uniforms.uCloudTex.value = cloudTex;
     updateFxState();
   }
 
-  /* 降水：屏幕对齐的圆盘内粒子，随相机推近缩放，只在可见半球范围 */
+  /* 降水：屏幕对齐的圆盘内粒子，只在可见半球；雨为线段、雪为点精灵 */
   var PR = 1.0;
   var precipGroup = new THREE.Group();
   precipGroup.position.set(0, 0, -3.0);
   camera.add(precipGroup);
 
-  function precipMaterial(kind) {
-    return new THREE.ShaderMaterial({
-      transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
-      uniforms: {
-        uSize: { value: kind === 'rain' ? 0.030 : 0.011 },
-        uScale: { value: 700 }, uOpacity: { value: 0 }, uR: { value: PR },
-        uVar: { value: kind === 'rain' ? 0.22 : 1.10 }
-      },
-      vertexShader: [
-        'attribute float aPhase;',
-        'uniform float uSize, uScale, uR, uVar;',
-        'varying float vA;',
-        'void main(){',
-        ' vec3 p = position;',
-        ' float ny = (p.y + uR) / (uR * 2.0);',
-        ' float rn = length(p.xy) / uR;',
-        ' vA = smoothstep(1.0, 0.86, ny) * smoothstep(0.0, 0.16, ny) * smoothstep(1.0, 0.80, rn);',
-        ' float jit = 1.0 + uVar * (fract(aPhase * 7.13) - 0.5);',
-        ' vec4 mv = modelViewMatrix * vec4(p, 1.0);',
-        ' gl_PointSize = uSize * jit * (uScale / max(0.6, -mv.z));',
-        ' gl_Position = projectionMatrix * mv;',
-        '}'
-      ].join('\n'),
-      fragmentShader: (kind === 'rain' ? [
-        'uniform float uOpacity; varying float vA;',
-        'void main(){',
-        ' vec2 c = gl_PointCoord;',
-        ' float ax = smoothstep(0.10, 0.015, abs(c.x - 0.5));',
-        ' float ay = smoothstep(0.0, 0.12, c.y) * smoothstep(1.0, 0.80, c.y);',
-        ' float a = ax * ay * vA * uOpacity;',
-        ' if (a < 0.01) discard;',
-        ' gl_FragColor = vec4(vec3(0.80, 0.88, 1.0), a);',
-        '}'
-      ] : [
-        'uniform float uOpacity; varying float vA;',
-        'void main(){',
-        ' float d = length(gl_PointCoord - vec2(0.5));',
-        ' float a = smoothstep(0.5, 0.06, d) * vA * uOpacity;',
-        ' if (a < 0.01) discard;',
-        ' gl_FragColor = vec4(vec3(0.92, 0.96, 1.0), a);',
-        '}'
-      ]).join('\n')
-    });
+  // 局部降雨：3 个椭圆区域。按当前视野把候选点投到经纬度，再采样云图——
+  // 云最厚的位置更容易落雨，晴处不下，避免整球同时下雨。
+  var rainZones = [];
+  function cloudAt(lat, lon) {
+    if (!cloudAlpha) return 0.5;
+    var u = (lon + 180) / 360, v = (90 - lat) / 180;
+    var x = Math.max(0, Math.min(cloudAW - 1, Math.floor(u * cloudAW)));
+    var y = Math.max(0, Math.min(cloudAH - 1, Math.floor(v * cloudAH)));
+    return cloudAlpha[y * cloudAW + x];
   }
-
-  function buildPrecip(kind, max) {
-    var pos = new Float32Array(max * 3), ph = new Float32Array(max), sp = new Float32Array(max);
-    var rr = mulberry32(fx.seed ^ (kind === 'rain' ? 0x1234 : 0xabcd));
-    for (var i = 0; i < max; i++) {
-      var rad = PR * Math.sqrt(rr()), ang = rr() * Math.PI * 2;
-      pos[i * 3] = Math.cos(ang) * rad;
-      pos[i * 3 + 1] = rr() * PR * 2 - PR;
-      pos[i * 3 + 2] = 0;
-      ph[i] = rr() * Math.PI * 2;
-      sp[i] = kind === 'rain' ? 1.5 + rr() * 0.95 : 0.16 + rr() * 0.14;
+  function screenToLatLon(nx, ny) {
+    var scale = 3.45 / Math.max(1.1, curR);
+    var fwd = camera.position.clone().normalize().negate();
+    var right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0)).normalize();
+    var upv = new THREE.Vector3().crossVectors(right, fwd).normalize();
+    var pw = camera.position.clone()
+      .addScaledVector(right, nx * scale)
+      .addScaledVector(upv, ny * scale)
+      .addScaledVector(fwd, 3);
+    var dir = pw.normalize();
+    return {
+      lat: 90 - Math.acos(Math.max(-1, Math.min(1, dir.y))) / D2R,
+      lon: Math.atan2(dir.z, -dir.x) / D2R - 180
+    };
+  }
+  function buildZones() {
+    var rr = mulberry32(fx.seed ^ 0x51ed270b);
+    var cand = [];
+    for (var k = 0; k < 26; k++) {
+      var nx = rr() * 1.5 - 0.75, ny = rr() * 1.5 - 0.75;
+      var ll = screenToLatLon(nx, ny);
+      var dir = v3(ll.lat, ll.lon, 1).normalize();
+      var vis = dir.dot(anchor) > 0.35 ? 1 : 0.22;
+      cand.push({ x: nx, y: ny, w: cloudAt(ll.lat, ll.lon) * vis + rr() * 0.06 });
     }
-    var geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    geo.setAttribute('aPhase', new THREE.BufferAttribute(ph, 1));
-    geo.setDrawRange(0, 0);
-    var pts = new THREE.Points(geo, precipMaterial(kind));
-    pts.frustumCulled = false; pts.renderOrder = 7; pts.visible = false;
-    precipGroup.add(pts);
-    return { kind: kind, pts: pts, geo: geo, mat: pts.material, pos: pos, ph: ph, sp: sp,
-             max: max, count: 0, rr: mulberry32(fx.seed ^ (kind === 'rain' ? 0x9e37 : 0x77)) };
-  }
-  var rainSys = buildPrecip('rain', 1200);
-  var snowSys = buildPrecip('snow', 620);
-
-  function applyCounts() {
-    var q = fx.degraded ? 0.58 : 1;
-    var mobile = window.innerWidth <= 700 ? 0.72 : 1;
-    rainSys.count = Math.round(rainSys.max * q * mobile);
-    snowSys.count = Math.round(snowSys.max * q * mobile);
-    rainSys.geo.setDrawRange(0, rainSys.count);
-    snowSys.geo.setDrawRange(0, snowSys.count);
+    cand.sort(function (a, b) { return b.w - a.w; });
+    rainZones = [];
+    for (var i = 0; i < 3; i++) {
+      var c = cand[i] || { x: 0, y: 0 };
+      rainZones.push(new THREE.Vector4(c.x, c.y, 0.22 + rr() * 0.10, 0.34 + rr() * 0.18));
+    }
+    if (rainSys && rainSys.mat) rainSys.mat.uniforms.uZones.value = rainZones;
     updateFxState();
   }
 
-  function stepPrecip(sys, dt, now, on) {
+  var RAIN_CAP = 900, SNOW_CAP = 560, SPLASH_CAP = 40;
+
+  function rainMaterial() {
+    return new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+      uniforms: {
+        uOpacity: { value: 0 }, uR: { value: PR }, uGust: { value: 1 },
+        uZones: { value: rainZones }
+      },
+      vertexShader: [
+        'attribute float aHead;',
+        'attribute float aAlpha;',
+        'uniform float uOpacity, uR, uGust;',
+        'uniform vec4 uZones[3];',
+        'varying float vA; varying float vHead;',
+        'float zoneMask(vec2 p){',
+        ' float m = 0.0;',
+        ' for (int i = 0; i < 3; i++) {',
+        '  vec2 d = (p - uZones[i].xy) / vec2(uZones[i].z, uZones[i].w);',
+        '  m = max(m, 1.0 - smoothstep(0.40, 1.0, length(d)));',
+        ' }',
+        ' return m;',
+        '}',
+        'void main(){',
+        ' vec3 p = position;',
+        ' float ny = (p.y + uR) / (uR * 2.0), rn = length(p.xy) / uR;',
+        ' float disk = smoothstep(1.0, 0.88, ny) * smoothstep(0.0, 0.12, ny) * smoothstep(1.0, 0.84, rn);',
+        ' vA = aAlpha * disk * (0.28 + 0.72 * zoneMask(p.xy)) * uGust;',
+        ' vHead = aHead;',
+        ' gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);',
+        '}'
+      ].join('\n'),
+      fragmentShader: [
+        'uniform float uOpacity; varying float vA; varying float vHead;',
+        'void main(){',
+        // 头部略亮、尾部虚化；1px 线宽由 WebGL 固定
+        ' float a = vA * uOpacity * mix(0.14, 1.0, vHead);',
+        ' if (a < 0.008) discard;',
+        ' vec3 col = mix(vec3(0.60, 0.72, 0.90), vec3(0.92, 0.96, 1.0), vHead);',
+        ' gl_FragColor = vec4(col, a);',
+        '}'
+      ].join('\n')
+    });
+  }
+
+  function buildRain() {
+    var pos = new Float32Array(RAIN_CAP * 6);
+    var head = new Float32Array(RAIN_CAP * 2);
+    var alp = new Float32Array(RAIN_CAP * 2);
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute('aHead', new THREE.BufferAttribute(head, 1));
+    geo.setAttribute('aAlpha', new THREE.BufferAttribute(alp, 1));
+    geo.setDrawRange(0, 0);
+    var mat = rainMaterial();
+    var lines = new THREE.LineSegments(geo, mat);
+    lines.frustumCulled = false; lines.renderOrder = 7; lines.visible = false;
+    precipGroup.add(lines);
+    // 三层景深：近景更大更快更实、中景正常、远景小而慢更淡；z 也拉开，透视自然分层
+    var LY = [
+      { spd: 2.40, len: 0.055, alpha: 0.52, z: 0.13, share: 0.30 },
+      { spd: 1.55, len: 0.036, alpha: 0.33, z: 0.00, share: 0.45 },
+      { spd: 0.92, len: 0.022, alpha: 0.15, z: -0.15, share: 0.25 }
+    ];
+    var x = new Float32Array(RAIN_CAP), y = new Float32Array(RAIN_CAP);
+    var len = new Float32Array(RAIN_CAP), spd = new Float32Array(RAIN_CAP);
+    var lay = new Uint8Array(RAIN_CAP), zi = new Uint8Array(RAIN_CAP);
+    var rr = mulberry32(fx.seed ^ 0x1234);
+    for (var i = 0; i < RAIN_CAP; i++) {
+      // 按份额排布：0–30% 近景、30–75% 中景、75–100% 远景；降级时从尾部砍，先减远景层
+      var f = i / RAIN_CAP;
+      var L = f < 0.30 ? 0 : f < 0.75 ? 1 : 2;
+      lay[i] = L;
+      len[i] = LY[L].len * (0.82 + rr() * 0.36);
+      spd[i] = LY[L].spd * (0.88 + rr() * 0.24);
+      head[i * 2] = 1; head[i * 2 + 1] = 0;
+      alp[i * 2] = LY[L].alpha; alp[i * 2 + 1] = LY[L].alpha;
+      zi[i] = Math.floor(rr() * Math.max(1, rainZones.length));
+      var z0 = rainZones[zi[i]] || new THREE.Vector4(0, 0, .3, .4);
+      var a0 = rr() * Math.PI * 2, r0 = Math.sqrt(rr()) * 0.92;
+      x[i] = z0.x + Math.cos(a0) * r0 * z0.z;
+      y[i] = z0.y + Math.sin(a0) * r0 * z0.w;
+    }
+    return { kind: 'rain', obj: lines, geo: geo, mat: mat, pos: pos, x: x, y: y,
+             len: len, spd: spd, lay: lay, zi: zi, zv: [0.13, 0.0, -0.15],
+             max: RAIN_CAP, count: 0, rng: mulberry32(fx.seed ^ 0x9e37) };
+  }
+
+  function buildSnow() {
+    var pos = new Float32Array(SNOW_CAP * 3);
+    var ph = new Float32Array(SNOW_CAP), sz = new Float32Array(SNOW_CAP), al = new Float32Array(SNOW_CAP);
+    var rr = mulberry32(fx.seed ^ 0xabcd);
+    var x = new Float32Array(SNOW_CAP), y = new Float32Array(SNOW_CAP), sp = new Float32Array(SNOW_CAP);
+    for (var i = 0; i < SNOW_CAP; i++) {
+      var r = Math.sqrt(rr()) * PR, a = rr() * Math.PI * 2;
+      x[i] = Math.cos(a) * r; y[i] = rr() * PR * 2 - PR;
+      pos[i * 3] = x[i]; pos[i * 3 + 1] = y[i];
+      ph[i] = rr() * Math.PI * 2;
+      var c = rr();                       // 三种粒径，避免均匀白点
+      sz[i] = c < 0.28 ? 1.65 : c < 0.72 ? 1.05 : 0.68;
+      sp[i] = (0.19 + rr() * 0.12) * (0.55 + sz[i] * 0.42);
+      al[i] = 0.26 + 0.30 * Math.min(1, sz[i] / 1.4);
+    }
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute('aPhase', new THREE.BufferAttribute(ph, 1));
+    geo.setAttribute('aSize', new THREE.BufferAttribute(sz, 1));
+    geo.setAttribute('aAlpha', new THREE.BufferAttribute(al, 1));
+    geo.setDrawRange(0, 0);
+    var mat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+      uniforms: { uSize: { value: 0.012 }, uScale: { value: 700 }, uOpacity: { value: 0 }, uR: { value: PR } },
+      vertexShader: [
+        'attribute float aPhase; attribute float aSize; attribute float aAlpha;',
+        'uniform float uSize, uScale, uR;',
+        'varying float vA;',
+        'void main(){',
+        ' vec3 p = position;',
+        ' float ny = (p.y + uR) / (uR * 2.0), rn = length(p.xy) / uR;',
+        // 稀疏空间：被 coarse 门限压过的位置更淡，形成疏密
+        ' float gate = 0.58 + 0.42 * sin(p.x * 3.1 + 1.3) * sin(p.y * 2.7 - 0.8);',
+        ' vA = smoothstep(1.0, 0.86, ny) * smoothstep(0.0, 0.16, ny) * smoothstep(1.0, 0.80, rn) * aAlpha * (0.45 + 0.55 * gate);',
+        ' vec4 mv = modelViewMatrix * vec4(p, 1.0);',
+        ' gl_PointSize = uSize * aSize * (uScale / max(0.6, -mv.z));',
+        ' gl_Position = projectionMatrix * mv;',
+        '}'
+      ].join('\n'),
+      fragmentShader: [
+        'uniform float uOpacity; varying float vA;',
+        'void main(){',
+        ' float d = length(gl_PointCoord - vec2(0.5));',
+        // 边缘带一点融化感，不是硬圆点
+        ' float a = smoothstep(0.5, 0.10, d) * vA * uOpacity;',
+        ' if (a < 0.008) discard;',
+        ' gl_FragColor = vec4(vec3(0.93, 0.97, 1.0), a);',
+        '}'
+      ].join('\n')
+    });
+    var pts = new THREE.Points(geo, mat);
+    pts.frustumCulled = false; pts.renderOrder = 7; pts.visible = false;
+    precipGroup.add(pts);
+    return { kind: 'snow', obj: pts, geo: geo, mat: mat, pos: pos, x: x, y: y, sp: sp, ph: ph,
+             max: SNOW_CAP, count: 0, rng: mulberry32(fx.seed ^ 0x77) };
+  }
+
+  // 落地溅射：极少量短命涟漪，只在可见半球下缘
+  function buildSplash() {
+    var pos = new Float32Array(SPLASH_CAP * 3), age = new Float32Array(SPLASH_CAP);
+    for (var i = 0; i < SPLASH_CAP; i++) { age[i] = 1; pos[i * 3 + 1] = 9; }
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute('aAge', new THREE.BufferAttribute(age, 1).setUsage(THREE.DynamicDrawUsage));
+    geo.setDrawRange(0, SPLASH_CAP);
+    var mat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+      uniforms: { uScale: { value: 700 }, uOpacity: { value: 0 } },
+      vertexShader: [
+        'attribute float aAge; uniform float uScale; varying float vAge;',
+        'void main(){',
+        ' vAge = aAge;',
+        ' vec4 mv = modelViewMatrix * vec4(position, 1.0);',
+        ' gl_PointSize = uScale * (0.0035 + 0.0075 * aAge) / max(0.6, -mv.z);',
+        ' gl_Position = projectionMatrix * mv;',
+        '}'
+      ].join('\n'),
+      fragmentShader: [
+        'uniform float uOpacity; varying float vAge;',
+        'void main(){',
+        ' float d = length(gl_PointCoord - vec2(0.5)) * 2.0;',
+        ' float ring = smoothstep(0.16, 0.0, abs(d - 0.58));',
+        ' float a = ring * (1.0 - vAge) * (1.0 - vAge) * uOpacity * 0.55;',
+        ' if (a < 0.008) discard;',
+        ' gl_FragColor = vec4(vec3(0.72, 0.84, 1.0), a);',
+        '}'
+      ].join('\n')
+    });
+    var pts = new THREE.Points(geo, mat);
+    pts.frustumCulled = false; pts.renderOrder = 8; pts.visible = false;
+    precipGroup.add(pts);
+    return { obj: pts, geo: geo, mat: mat, pos: pos, age: age, slot: 0 };
+  }
+
+  buildZones();
+  var rainSys = buildRain();
+  var snowSys = buildSnow();
+  var splashSys = buildSplash();
+  rainSys.mat.uniforms.uZones.value = rainZones;
+
+  var rainLevel = 0;                     // 0 小雨 / 1 暴雨
+  var gustPhase = 0;
+
+  function applyCounts() {
+    // 降级时从尾部砍粒子（tail 是远景层），先降远景，再降云分辨率
+    var q = fx.degrade >= 1 ? 0.62 : 1;
+    var mobile = window.innerWidth <= 700 ? 0.72 : 1;
+    rainSys.count = Math.round(rainSys.max * q * mobile);
+    snowSys.count = Math.round(snowSys.max * (fx.degrade >= 1 ? 0.80 : 1) * mobile);
+    splashSys.obj.visible = fx.degrade < 1;
+    updateFxState();
+  }
+
+  function spawnRain(sys, i, atTop) {
+    var zi = Math.floor(sys.rng() * Math.max(1, rainZones.length));
+    sys.zi[i] = zi;
+    var z = rainZones[zi] || new THREE.Vector4(0, 0, .3, .4);
+    var a = sys.rng() * Math.PI * 2, r = Math.sqrt(sys.rng()) * 0.92;
+    sys.x[i] = z.x + Math.cos(a) * r * z.z;
+    sys.y[i] = atTop ? z.y + z.w * (0.88 + sys.rng() * 0.18) : z.y + Math.sin(a) * r * z.w;
+  }
+  function respawnSnow(sys, i, atTop) {
+    for (var k = 0; k < 3; k++) {
+      var ra = sys.rng() * Math.PI * 2, rr2 = Math.sqrt(sys.rng()) * PR;
+      var gx = Math.cos(ra) * rr2, gy2 = atTop ? PR : sys.rng() * PR * 2 - PR;
+      // 门限留出空档，避免均匀铺满
+      if (0.58 + 0.42 * Math.sin(gx * 3.1 + 1.3) * Math.sin(gy2 * 2.7 - 0.8) > 0.34 || k === 2) {
+        sys.x[i] = gx; sys.y[i] = gy2; return;
+      }
+    }
+  }
+
+  function stepRain(sys, dt, now, on) {
     var u = sys.mat.uniforms;
-    var target = on ? (sys.kind === 'rain' ? 0.72 : 0.58) : 0;
-    u.uOpacity.value += (target - u.uOpacity.value) * Math.min(1, dt / 220);
-    if (u.uOpacity.value < 0.02 && !on) { sys.pts.visible = false; return; }
-    if (on) sys.pts.visible = true;
-    var p = sys.pos, n = sys.count, R = PR, wob = dt / 1000;
+    var level = rainLevel;
+    var target = on ? (level ? 0.82 : 0.58) : 0;
+    u.uOpacity.value += (target - u.uOpacity.value) * Math.min(1, dt / 260);
+    if (u.uOpacity.value < 0.02 && !on) { sys.obj.visible = false; return; }
+    if (on) sys.obj.visible = true;
+
+    // 阵风：密度与风速低频起伏，几秒一次
+    gustPhase += dt;
+    var gust = 0.72 + 0.24 * Math.sin(gustPhase * 0.00055) + 0.12 * Math.sin(gustPhase * 0.0016 + 1.2);
+    gust = Math.max(0.36, Math.min(1.15, gust));
+    u.uGust.value = on ? gust : 0;
+
+    // 风向：小雨近乎垂直，暴雨明显斜；整场统一角度，不逐颗随机
+    var wind = (level ? 0.34 : 0.075) + 0.05 * Math.sin(gustPhase * 0.0011);
+    var wx = Math.sin(wind), wy = Math.cos(wind);
+    var p = sys.pos, n = sys.count, wob = dt / 1000;
+    var speedK = gust * (level ? 1.18 : 0.94);
+
+    for (var i = 0; i < n; i++) {
+      var L = sys.lay[i];
+      var z = rainZones[sys.zi[i]] || rainZones[0];
+      sys.y[i] -= sys.spd[i] * speedK * wob;
+      sys.x[i] -= wx * sys.spd[i] * 0.55 * wob;
+      // 落到雨区底边即回到雨区顶部；横向越界则绕回，避免被 zoneMask 吃掉
+      if (sys.y[i] < z.y - z.w * 1.08) spawnRain(sys, i, true);
+      if (sys.x[i] < z.x - z.z) sys.x[i] += z.z * 2;
+      if (sys.x[i] > z.x + z.z) sys.x[i] -= z.z * 2;
+      var hx = sys.x[i], hy = sys.y[i], ln = sys.len[i];
+      var b = i * 6, zz = sys.zv[L];
+      p[b] = hx; p[b + 1] = hy; p[b + 2] = zz;
+      p[b + 3] = hx + wx * ln; p[b + 4] = hy + wy * ln; p[b + 5] = zz;
+      // 局部溅射：只在近/中景、雨区下缘、概率低
+      if (L < 2 && hy < z.y - z.w * 0.55 && hy > z.y - z.w * 0.9 && Math.random() < 0.05 && splashSys.obj.visible) {
+        var s = splashSys.slot = (splashSys.slot + 1) % SPLASH_CAP;
+        splashSys.pos[s * 3] = hx; splashSys.pos[s * 3 + 1] = hy; splashSys.pos[s * 3 + 2] = 0.01;
+        splashSys.age[s] = 0;
+      }
+    }
+    sys.geo.setDrawRange(0, n * 2);
+    sys.geo.attributes.position.needsUpdate = true;
+    var ax = splashSys.geo.attributes;
+    for (var j = 0; j < SPLASH_CAP; j++) {
+      if (splashSys.age[j] < 1) {
+        splashSys.age[j] += wob / 0.42;
+        if (splashSys.age[j] >= 1) { splashSys.pos[j * 3 + 1] = 9; splashSys.age[j] = 1; }
+      }
+    }
+    ax.position.needsUpdate = true; ax.aAge.needsUpdate = true;
+    splashSys.mat.uniforms.uOpacity.value = u.uOpacity.value;
+  }
+
+  function stepSnow(sys, dt, now, on) {
+    var u = sys.mat.uniforms;
+    u.uOpacity.value += ((on ? 0.58 : 0) - u.uOpacity.value) * Math.min(1, dt / 260);
+    if (u.uOpacity.value < 0.02 && !on) { sys.obj.visible = false; return; }
+    if (on) sys.obj.visible = true;
+    var p = sys.pos, n = sys.count, wob = dt / 1000;
     for (var i = 0; i < n; i++) {
       var iy = i * 3 + 1;
       p[iy] -= sys.sp[i] * wob;
-      if (p[iy] < -R) {
-        p[iy] = R;
-        p[i * 3] = (sys.rr() * 2 - 1) * R;
-        p[i * 3 + 2] = 0;
-      }
-      if (sys.kind === 'snow') p[i * 3] += Math.sin(now * 0.0008 + sys.ph[i]) * 0.0016 * (dt / 16.7);
+      // 摆动幅度与粒径相关：大颗飘得慢、摆幅大
+      p[i * 3] += Math.sin(now * 0.0008 + sys.ph[i]) * 0.0018 * (0.4 + sys.ph[i] % 1) * (dt / 16.7);
+      if (p[iy] < -PR) respawnSnow(sys, i, false), p[iy] = sys.y[i];
+      sys.y[i] = p[iy]; sys.x[i] = p[i * 3];
     }
+    sys.geo.setDrawRange(0, n);
     sys.geo.attributes.position.needsUpdate = true;
+  }
+
+  function stepPrecip(sys, dt, now, on) {
+    if (sys.kind === 'rain') stepRain(sys, dt, now, on);
+    else stepSnow(sys, dt, now, on);
   }
 
   function applyWeatherChips(i) {
@@ -701,14 +1015,19 @@
     applyWeatherChips(i);
     applyWeatherDim();
     buildCloud();
+    buildZones();
     syncFx();
   }
 
   function updateFxState() {
     if (seedOut) seedOut.textContent = '种子 ' + (fx.seed >>> 0).toString(16).slice(0, 6);
     if (!fxState) return;
-    fxState.textContent = '云 ' + (fx.size ? fx.size + '×' + (fx.size >> 1) : '—') +
-      ' · 雨 ' + rainSys.count + ' · 雪 ' + snowSys.count + (fx.degraded ? ' · 降级' : '');
+    fxState.textContent = '模拟 · ' + WEATHERS[state.weather][1] +
+      (state.weather === 2 ? (rainLevel ? '（暴雨）' : '（小雨）') : '') +
+      ' · 云 ' + (fx.size ? fx.size + '×' + (fx.size >> 1) : '—') +
+      ' · 雨 ' + (fx.rainOn ? rainSys.count : 0) +
+      ' · 雪 ' + (fx.snowOn ? snowSys.count : 0) +
+      (fx.degrade ? ' · 降级' + fx.degrade : '');
   }
 
   /* 每帧推进：云层自转/漂移/透明度渐变，降水粒子下落与淡入淡出 */
@@ -720,15 +1039,16 @@
       cu.uAmt.value = target;
     } else {
       cu.uAmt.value += (target - cu.uAmt.value) * Math.min(1, dt / 820);
-      cloudDrift += dt * 0.000009;
-      cloudMesh.rotation.y += dt * 0.0000022;
+      cloudDrift += dt * 0.000006;
+      // 云层比地表（相机自转）略快：0.000029 vs 0.000025 rad/ms
+      cloudMesh.rotation.y += dt * 0.000029;
     }
     cu.uDrift.value = cloudDrift;
 
     // 点精灵按画布物理高度换算，保证 CSS 像素下粒子大小稳定
     var px = size.h * size.dpr / (2 * Math.tan(curFov * D2R / 2));
-    rainSys.mat.uniforms.uScale.value = px;
     snowSys.mat.uniforms.uScale.value = px;
+    splashSys.mat.uniforms.uScale.value = px;
     // 圆盘半径跟随当前缩放，降水只在球体附近，不铺满全屏
     precipGroup.scale.setScalar(3.45 / Math.max(1.1, curR));
     stepPrecip(rainSys, dt, now, fx.rainOn && !reduce);
@@ -736,10 +1056,12 @@
   }
 
   function degradeFx() {
-    if (fx.degraded) return;
-    fx.degraded = true;
-    buildCloud();
+    // 两级：先砍粒子（远景层先走），仍不够再降云层分辨率；光照本身不参与降级
+    if (fx.degrade >= 2) return;
+    fx.degrade += 1;
+    if (fx.degrade === 1) quality = 0.72;
     applyCounts();
+    buildCloud();
   }
 
   var FXMODES = [['none', '无'], ['cloud', '仅云'], ['all', '全部']];
@@ -760,6 +1082,112 @@
     rollWeather((fx.seed ^ 0x9e3779b9) >>> 0);
   });
 
+  /* ---------------- 日照模式 / 雨量档位 / 面板开合 ---------------- */
+  var TIMEMODES = [['real', '真实时间'], ['manual', '手动时刻']];
+  var RAINLEVELS = [['small', '小雨'], ['heavy', '暴雨']];
+  var timeWrap = document.getElementById('timeModes');
+  var rainWrap = document.getElementById('rainLevels');
+  var simBadge = document.getElementById('simBadge');
+
+  function parisHourNow() {
+    var now = new Date();
+    try {
+      var f = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', hour: 'numeric', minute: 'numeric', hour12: false });
+      var parts = f.formatToParts ? f.formatToParts(now) : [];
+      var hh = 0, mm = 0;
+      parts.forEach(function (p) {
+        if (p.type === 'hour') hh = parseInt(p.value, 10);
+        if (p.type === 'minute') mm = parseInt(p.value, 10);
+      });
+      return hh + mm / 60;
+    } catch (e) {
+      return now.getHours() + now.getMinutes() / 60;
+    }
+  }
+
+  function applyTimeMode() {
+    if (timeWrap) {
+      Array.prototype.forEach.call(timeWrap.children, function (c, j) {
+        c.classList.toggle('is-on', TIMEMODES[j][0] === state.timeMode);
+      });
+    }
+    if (simBadge) {
+      simBadge.textContent = state.timeMode === 'real'
+        ? '真实时间 · 日照按 UTC 推算'
+        : '模拟 · 手动时刻';
+    }
+    updateSun();
+  }
+
+  if (timeWrap) {
+    TIMEMODES.forEach(function (m, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip' + (state.timeMode === m[0] ? ' is-on' : '');
+      b.textContent = m[1];
+      b.addEventListener('click', function () {
+        state.timeMode = m[0];
+        if (m[0] === 'real') {
+          state.hour = Math.round(parisHourNow() * 2) / 2;
+          hourEl.value = state.hour;
+          applyTime();
+        }
+        applyTimeMode();
+      });
+      timeWrap.appendChild(b);
+    });
+  }
+
+  if (rainWrap) {
+    RAINLEVELS.forEach(function (r, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip' + (rainLevel === i ? ' is-on' : '');
+      b.textContent = r[1];
+      b.addEventListener('click', function () {
+        rainLevel = i;
+        Array.prototype.forEach.call(rainWrap.children, function (c, j) { c.classList.toggle('is-on', j === i); });
+        updateFxState();
+      });
+      rainWrap.appendChild(b);
+    });
+  }
+
+  // 真实时间模式下每分钟刷新一次巴黎时刻，太阳方向随之缓慢移动
+  setInterval(function () {
+    if (state.timeMode !== 'real') return;
+    state.hour = Math.round(parisHourNow() * 2) / 2;
+    hourEl.value = state.hour;
+    applyTime();
+  }, 60000);
+
+  var envEl = document.getElementById('env');
+  var envToggle = document.getElementById('envToggle');
+  var envClose = document.getElementById('envClose');
+
+  function setPanel(open) {
+    if (!envEl || !envToggle) return;
+    envEl.hidden = !open;
+    envToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    document.body.classList.toggle('is-env', open);
+    if (open) {
+      requestAnimationFrame(function () { envEl.classList.add('is-in'); });
+    } else {
+      envEl.classList.remove('is-in');
+    }
+  }
+  if (envToggle) envToggle.addEventListener('click', function () {
+    setPanel(envEl.hidden);
+  });
+  if (envClose) envClose.addEventListener('click', function () { setPanel(false); });
+  // 移动端点击面板外收起（桌面端保留面板，避免调参时误关）
+  document.addEventListener('pointerdown', function (e) {
+    if (window.innerWidth > 900 || !document.body.classList.contains('is-env')) return;
+    if (envEl.contains(e.target) || envToggle.contains(e.target)) return;
+    setPanel(false);
+  });
+
+  applyTimeMode();
   applyCounts();
   rollWeather(fx.seed);
 
@@ -788,6 +1216,7 @@
   window.addEventListener('resize', resize);
   resize();
   curR = target.r = orbit.r = fitR;
+  applyCamera();
 
   function projectPins() {
     var w = size.w, h = size.h;
@@ -816,7 +1245,8 @@
       fpsAvg = frames * 1000 / acc;
       fpsEl.textContent = Math.round(fpsAvg) + ' fps';
       if (!reduce && !fx.noDegrade && frames > 8) {
-        if (fpsAvg < 34 && quality === 1) { quality = 0.72; resize(); degradeFx(); }
+        if (fpsAvg < 34 && fx.degrade < 1) { degradeFx(); resize(); }
+        else if (fpsAvg < 30 && fx.degrade < 2) { degradeFx(); }
       }
       acc = 0; frames = 0;
     }
@@ -848,8 +1278,12 @@
     requestAnimationFrame(tick);
   });
 
-  // 键盘：Esc 返回远景
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') blur(); });
+  // 键盘：Esc 先收面板，再退出聚焦
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (document.body.classList.contains('is-env')) setPanel(false);
+    else blur();
+  });
 
   // 便于自动化截图与排查
   window.__GLOBE__ = {
@@ -865,9 +1299,19 @@
       hourEl.value = state.hour;
       applyTime();
     },
-    setWeather: function (i) { state.weather = i; applyWeatherChips(i); applyWeatherDim(); syncFx(); },
+    setWeather: function (i) { state.weather = i; applyWeatherChips(i); applyWeatherDim(); buildCloud(); buildZones(); syncFx(); },
     setFxMode: function (m) { fx.mode = m; syncFx(); },
     setSeed: function (n) { rollWeather((n >>> 0)); },
+    setTimeMode: function (m) {
+      state.timeMode = m === 'manual' ? 'manual' : 'real';
+      applyTimeMode();
+    },
+    setRainLevel: function (n) {
+      rainLevel = n ? 1 : 0;
+      if (rainWrap) Array.prototype.forEach.call(rainWrap.children, function (c, j) { c.classList.toggle('is-on', j === rainLevel); });
+      updateFxState();
+    },
+    setPanel: setPanel,
     // 自动化截图用：关掉自动降级，便于核对未降级时的云层分辨率
     lockQuality: function (on) { fx.noDegrade = !!on; },
     setLight: function (c) { earthMat.uniforms.uContrast.value = Math.max(0.5, Math.min(1.8, c)); },
@@ -876,9 +1320,12 @@
         fps: Math.round(fpsAvg), quality: quality, dpr: size.dpr, w: size.w, h: size.h,
         hiLoaded: hiLoaded, nightLoaded: nightLoaded, tex: texState.textContent,
         fxMode: fx.mode, seed: fx.seed, cloudAmt: cloudMat ? +cloudMat.uniforms.uAmt.value.toFixed(2) : 0,
-        cloudSize: fx.size, rainOn: fx.rainOn, snowOn: fx.snowOn, degraded: fx.degraded,
-        rain: rainSys.count, snow: snowSys.count, contrast: earthMat.uniforms.uContrast.value,
-        sun: [state.sun.x.toFixed(2), state.sun.y.toFixed(2), state.sun.z.toFixed(2)]
+        cloudSize: fx.size, rainOn: fx.rainOn, snowOn: fx.snowOn, degrade: fx.degrade,
+        rain: rainSys.count, snow: snowSys.count, rainLevel: rainLevel,
+        timeMode: state.timeMode, contrast: earthMat.uniforms.uContrast.value,
+        sunLat: +(state.sunLat || 0).toFixed(1), sunLon: +(state.sunLon || 0).toFixed(1),
+        sun: [state.sun.x.toFixed(2), state.sun.y.toFixed(2), state.sun.z.toFixed(2)],
+        panelOpen: !document.body.classList.contains('is-env') ? false : true
       };
     }
   };

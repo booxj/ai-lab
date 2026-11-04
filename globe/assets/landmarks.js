@@ -21,6 +21,8 @@ window.LANDMARKS = {
       country: '法国', countryEn: 'FRANCE', city: '巴黎', cityEn: 'PARIS',
       name: '巴黎圣母院', nameEn: 'NOTRE-DAME DE PARIS',
       lat: 48.8530, lon: 2.3499, status: 'open', thumb: 'notre-dame',
+      photo: 'notre-dame/assets/nd-front.jpg',
+      photoCredit: '实拍 · GoodFreePhotos · CC0 公共领域',
       blurb: '西立面双塔、三连拱与玫瑰窗，哥特盛期的起点。',
       cases: {
         video: 'c3-notre-dame-film-001',
@@ -31,6 +33,8 @@ window.LANDMARKS = {
     },
     { id: 'kinkakuji', slug: 'kinkakuji', country: '日本', countryEn: 'JAPAN', city: '京都', cityEn: 'KYOTO',
       name: '金阁寺', nameEn: 'KINKAKU-JI', lat: 35.0394, lon: 135.7292, status: 'open', thumb: 'kinkakuji',
+      photo: 'kinkakuji/assets/kj-pond.jpg',
+      photoCredit: '实拍 · GoodFreePhotos · CC0 公共领域',
       blurb: '镜湖池畔的金箔楼阁，晴日与雪日两套实拍取景。',
       cases: {
         video: 'c3-kinkakuji-film-001',
