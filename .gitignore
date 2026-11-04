@@ -1,0 +1,17 @@
+# 依赖与构建中间产物
+node_modules/
+*.log
+
+# 截图迭代产物与录屏原片（交付截图请放 temp 工作区，不入库）
+.screenshots/
+shots/
+*.mp4
+*.mov
+*.webm
+
+# 缓存与本地环境
+.DS_Store
+.cache/
+
+# 超过 5 MB 的二进制走 LFS 或外链，不直接入库（见 docs/CONVENTIONS.md 第 7 节）
+# 例外：globe/assets 下的地球贴图与其 base64 运行时文件已按需分级加载

@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "case_id": "c1-web-gallery-001",
+  "run": "v01",
+  "title": "纸境 · 旧网页作品廊（迁移登记）",
+  "capability": "c1",
+  "model": {
+    "name": "AURA legacy demo",
+    "slug": "legacy-aura",
+    "version": "pre-2026 snapshot",
+    "provider": "unknown"
+  },
+  "access": {
+    "channel": "local",
+    "endpoint": "web/index.html",
+    "region": ""
+  },
+  "generated_at": "2026-11-04T16:18:00+08:00",
+  "human_intervention": {
+    "level": "heavy",
+    "notes": "旧 demo，原始生成过程未留存；本次仅改写相对路径"
+  },
+  "duration_seconds": 0,
+  "cost": {
+    "currency": "CNY",
+    "amount": 0,
+    "basis": "未知（旧 demo）"
+  },
+  "license": {
+    "code": "TBD",
+    "content": "TBD",
+    "assets": "TBD"
+  },
+  "entry": "result.html",
+  "preview": "preview.png",
+  "prompt": "prompt.md",
+  "offline": {
+    "ready": true,
+    "self_contained": false,
+    "external_refs": [
+      "../../../../assets/css/fonts.css",
+      "../../../../assets/css/base.css",
+      "../../../../assets/css/paper.css",
+      "../../../../assets/js/audio.js",
+      "../../../../assets/js/core.js",
+      "../../../../assets/js/paper.js"
+    ]
+  },
+  "provenance": "legacy-import",
+  "prompt_verbatim": false,
+  "notes": "generated_at 为迁移登记时间，非原生成时间。依赖仓库 assets/，因此 self_contained=false；仅作迁移示范与新索引 seed，不参与新作品统计。"
+}
