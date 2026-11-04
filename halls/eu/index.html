@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>哥特厅 · 欧洲 — AI-LAB ATLAS</title>
+<meta name="description" content="欧洲 哥特式 展厅：外景四道能力门（影像/网页/幻灯片/游戏），内景作品陈列。生成本地素材、0 外部依赖、离线可开。">
+<meta name="color-scheme" content="dark">
+<link rel="stylesheet" href="../_shell/hall.css">
+<script src="../_shell/configs.js"></script>
+</head>
+<body data-hall="eu">
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="返回七洲总览">
+    <svg class="brand__mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.6"/><path d="M3.4 12h17.2M12 3.4v17.2"/><path d="M6 18.4c3.2-3.6 9-3.6 12 0" opacity=".6"/>
+    </svg>
+    <span class="brand__txt"><span class="brand__name">AI-LAB ATLAS</span><span class="brand__sub">七洲展厅 · 07 HALLS</span></span>
+  </a>
+  <nav class="atlas" id="atlas" aria-label="洲际导航"></nav>
+  <div class="topbar__right">
+    <button class="tbtn" id="backBtn" hidden>← 外景</button>
+    <button class="tbtn" id="hudBtn" aria-expanded="true">HUD</button>
+  </div>
+</header>
+
+<main class="app deck" id="app" data-route="ext">
+
+  <!-- 外景 -->
+  <section class="scene scene--ext" id="sceneExt">
+    <div class="ext-hero">
+      <div class="scene__stack">
+        <div class="layer ly-sky" aria-hidden="true"></div>
+        <div class="layer ly-facade"><img id="facadeImg" src="assets/facade.webp" alt="欧洲 哥特式 外景" decoding="async"></div>
+        <div class="layer facade-grade" aria-hidden="true"></div>
+        <div class="layer ly-haze" aria-hidden="true"><div class="haze haze--1"></div><div class="haze haze--2"></div></div>
+        <div class="layer ly-fg" aria-hidden="true"><img class="fg-arch" id="fgImg" alt="" hidden><div class="fg-css" id="fgCss"></div></div>
+        <div class="layer ly-vig" aria-hidden="true"></div>
+        <div class="layer ly-grain" aria-hidden="true"></div>
+      </div>
+
+      <div class="ext-type">
+        <p class="eyebrow" id="extEyebrow"></p>
+        <h1 class="display"><span class="display__cn" id="extCn"></span><span class="display__en" id="extEn"></span></h1>
+        <p class="lede" id="extLede"></p>
+      </div>
+      <div class="ext-meta" id="extMeta"></div>
+      <div class="portico-glow" aria-hidden="true"></div>
+    </div>
+
+    <div class="gates" id="gates"></div>
+
+    <div class="ext-foot">
+      <span id="extSize">首屏资产 —</span>
+      <span><b>哥特式</b> · 尖拱 · 石砌 · 蓝调时刻</span>
+      <span>生成写实分层 · 0 外部依赖 · 离线可开</span>
+    </div>
+  </section>
+
+  <!-- 内景 -->
+  <section class="scene scene--int" id="sceneInt" hidden>
+    <div class="scene__stack int-stack">
+      <div class="layer ly-nave"><img id="naveImg" src="assets/nave.webp" alt="欧洲 内景" decoding="async"></div>
+      <div class="int-grade" aria-hidden="true"></div>
+      <div class="layer ly-arcade"><img id="arcadeImg" alt="" decoding="async"></div>
+      <div class="layer" aria-hidden="true"><img id="beamImg" hidden><div class="beam-css" id="beamCss"></div></div>
+      <div class="layer ly-vig" aria-hidden="true"></div>
+      <div class="layer ly-grain" aria-hidden="true"></div>
+      <div class="dust" id="dust" aria-hidden="true"></div>
+    </div>
+
+    <header class="int-head">
+      <p class="eyebrow" id="intEyebrow"></p>
+      <h2 class="display display--sm"><span class="display__cn" id="intCn"></span><span class="display__en" id="intEn"></span></h2>
+      <p class="lede" id="intLede"></p>
+    </header>
+
+    <div class="gallery" id="gallery"></div>
+
+    <footer class="int-foot">
+      <button class="navbtn" id="prevDoor">← 上一门</button>
+      <p class="int-note" id="intNote"></p>
+      <button class="navbtn" id="nextDoor">下一门 →</button>
+    </footer>
+  </section>
+
+</main>
+
+<div class="veil" id="veil" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<div class="hud" id="hud">
+  <div class="hud__body" id="hudBody" hidden>
+    <div class="hud__row"><span>路由</span><span id="hudRoute">外景</span></div>
+    <div class="hud__row"><span>洲域</span><span id="hudScope"></span></div>
+    <div class="hud__row"><span>视口</span><span id="hudView"></span></div>
+    <div class="hud__row"><span>帧率</span><span id="hudFps">—</span></div>
+    <div class="hud__row"><span>P95 帧时</span><span id="hudP95">—</span></div>
+    <div class="hud__sep"></div>
+    <div class="hud__row"><span>首屏资产</span><span id="hudSize">—</span></div>
+    <div class="hud__bar"><i id="hudBar"></i></div>
+    <div class="hud__row"><span>动效</span><span id="hudMotion">完整</span></div>
+    <div class="hud__row"><span>视差</span><span id="hudLayers">—</span></div>
+    <div class="hud__sep"></div>
+    <p class="hud__note">帧率为本机/无头读数，真机需复测。按 H 开关 HUD。</p>
+  </div>
+  <button class="hud__tab" id="hudTab" aria-expanded="false" aria-controls="hudBody">
+    <span class="hud__dot"></span><span class="hud__fps" id="fpsTab">—</span><span>fps</span>
+  </button>
+</div>
+
+<script src="../_shell/hall.js"></script>
+</body>
+</html>
