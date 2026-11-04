@@ -911,7 +911,7 @@
     var u = sys.mat.uniforms;
     var level = rainLevel;
     var target = on ? (level ? 0.82 : 0.58) : 0;
-    u.uOpacity.value += (target - u.uOpacity.value) * Math.min(1, dt / 260);
+    u.uOpacity.value += (target - u.uOpacity.value) * Math.min(1, dt / 520);
     if (u.uOpacity.value < 0.02 && !on) { sys.obj.visible = false; return; }
     if (on) sys.obj.visible = true;
 
@@ -995,6 +995,8 @@
     fx.rainOn = fx.mode === 'all' && state.weather === 2;
     fx.snowOn = fx.mode === 'all' && state.weather === 3;
     if (cloudMesh) cloudMesh.visible = fx.mode !== 'none';
+    document.body.classList.toggle('fx-all', fx.mode === 'all');
+    document.body.classList.toggle('fx-cloud', fx.mode === 'cloud');
     updateFxState();
   }
 
