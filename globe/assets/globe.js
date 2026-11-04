@@ -31,10 +31,11 @@
   scene.add(camera);
 
   /* ---------------- 光照（按经纬度 / 时刻 / 季节推算） ---------------- */
-  var seasonDecl = [-14, 0, 23.2, -6]; // 春 / 夏 / 秋 / 冬（近似赤纬）
+  var seasonDecl = [0, 23.2, -6, -23.2]; // 春 / 夏 / 秋 / 冬（近似赤纬）
   var state = {
     hour: 17.5, season: 1, weather: 0, night: 0,
     timeMode: 'real',          // real：按 UTC 推太阳直射点；manual：按滑杆的巴黎钟表时间
+    clockAt: null,             // 仅截图/核对时把真实时间固定到某个 UTC 时刻
     sun: new THREE.Vector3(1, 0, 0),
     dim: 1
   };
@@ -84,7 +85,8 @@
   function updateSun() {
     var decl, lon;
     if (state.timeMode === 'real') {
-      var s = subsolar(new Date());
+      var now = new Date(state.clockAt || Date.now());
+      var s = subsolar(now);
       decl = s.lat; lon = s.lon;
     } else {
       // 手动时刻：滑杆是巴黎钟表时间 → 换算 UTC 后求直射经度；赤纬按季节档位
@@ -99,6 +101,7 @@
     state.sun.copy(dir);
     if (dayUniforms) dayUniforms.uSun.value.copy(dir);
     if (cloudMat) cloudMat.uniforms.uSun.value.copy(dir);
+    if (air) air.material.uniforms.uSun.value.copy(dir);
   }
 
   /* ---------------- 地球：昼夜合成着色 ---------------- */
@@ -146,21 +149,23 @@
       '  vec3 sun = normalize(uSun);',
       '  float d = dot(n, sun);',
       // 晨昏线：一条宽约 ±18° 的柔化过渡，不做硬边
-      '  float dayMix = smoothstep(-0.30, 0.16, d);',
+      '  float dayMix = smoothstep(-0.42, 0.20, d);',
       '  vec3 day = texture2D(uDay, vUv).rgb;',
+      // 提亮暗部但保留高光余量：海陆细节在受光面要看得见
+      '  day = pow(day, vec3(0.72)) * 1.10;',
       // 云影：淡压受光面的海陆，不压夜面灯光
       '  float cl = texture2D(uCloudTex, vec2(vUv.x + uCloudDrift, vUv.y)).a;',
-      '  cl = clamp(cl * uCloudAmt * 2.0, 0.0, 1.0);',
+      '  cl = clamp(cl * uCloudAmt * 3.2, 0.0, 1.0);',
       '  float shade = 1.0 - 0.30 * cl * cl * smoothstep(0.0, 0.45, d);',
-      '  float amb = 0.40 - 0.16 * uContrast;',
-      '  float gain = 0.56 + 0.30 * uContrast;',
+      '  float amb = 0.40 - 0.10 * uContrast;',
+      '  float gain = 0.60 + 0.26 * uContrast;',
       // 受光面增益留余量，避免整球提亮 / 过曝
       '  day *= (amb + gain * max(d, 0.0) * shade);',
       '  vec3 night = texture2D(uNight, vUv).rgb;',
       '  night = pow(night, vec3(0.86)) * 1.25;',
       '  vec3 col = mix(night * uNightAmt, day, dayMix);',
       // 过渡带偏暖：只在晨昏线附近叠一层橙红，不铺整球
-      '  float band = smoothstep(0.30, 0.0, abs(d));',
+      '  float band = smoothstep(0.44, 0.0, abs(d));',
       '  col += vec3(1.0, 0.44, 0.18) * band * band * 0.10;',
       '  vec3 vd = normalize(cameraPosition - vP);',
       '  float fres = pow(1.0 - clamp(dot(n, vd), 0.0, 1.0), 3.0);',
@@ -174,21 +179,32 @@
   var earth = new THREE.Mesh(new THREE.SphereGeometry(1, 128, 80), earthMat);
   scene.add(earth);
 
-  // 大气外晕
+  // 大气边缘散射：用半径 1.06 的背面壳，投影像一整个圆盘，紧贴球体轮廓向外淡出，
+  // 不会像正面壳那样在球体外留下一条与球分离的「圆环」。
   var air = new THREE.Mesh(
-    new THREE.SphereGeometry(1.035, 64, 40),
+    new THREE.SphereGeometry(1.06, 64, 40),
     new THREE.ShaderMaterial({
-      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.FrontSide,
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.BackSide,
+      uniforms: { uSun: { value: new THREE.Vector3(1, 0, 0) } },
       vertexShader: [
-        'varying vec3 vN; varying vec3 vP;',
+        'varying vec3 vN; varying vec3 vP; varying vec4 vV;',
         'void main(){ vN = normalize(mat3(modelMatrix) * normal); vec4 wp = modelMatrix * vec4(position,1.0); vP = wp.xyz;',
-        ' gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }'
+        ' vV = viewMatrix * wp;',
+        ' gl_Position = projectionMatrix * viewMatrix * wp; }'
       ].join('\n'),
       fragmentShader: [
-        'varying vec3 vN; varying vec3 vP;',
+        'uniform vec3 uSun;',
+        'varying vec3 vN; varying vec3 vP; varying vec4 vV;',
         'void main(){ vec3 vd = normalize(cameraPosition - vP);',
-        ' float f = pow(1.0 - clamp(dot(normalize(vN), vd), 0.0, 1.0), 2.6);',
-        ' gl_FragColor = vec4(vec3(0.34,0.54,0.80) * f, f * 0.52); }'
+        // 背面壳：法线朝外，取 abs 后轮廓处最亮、正对镜头处为 0
+        ' float f = pow(1.0 - clamp(abs(dot(normalize(vN), vd)), 0.0, 1.0), 3.2);',
+        // 半径权重：只在最后 18% 的壳厚里出现，向外自然衰减，不留硬边
+        ' float rr = length(vV.xy) / 1.06;',
+        ' float shell = smoothstep(1.0, 0.82, rr);',
+        // 受光侧边缘略亮，背光侧只留极淡轮廓
+        ' float lit = 0.30 + 0.70 * clamp(dot(normalize(vN), normalize(uSun)) * 0.5 + 0.5, 0.0, 1.0);',
+        ' f *= shell * lit;',
+        ' gl_FragColor = vec4(vec3(0.34,0.54,0.80) * f, f * 0.56); }'
       ].join('\n')
     })
   );
@@ -268,12 +284,16 @@
   var curTheta = 0, curPhi = 0, curR = 3.5, curFov = 32;
   var focused = null, dragging = false, moved = false, lastX = 0, lastY = 0, velT = 0, velP = 0;
 
-  // 让整颗球在任意画幅里都完整可见（含 10% 留白）
+  // 让整颗球在任意画幅里都完整可见（含 15% 留白）。
+  // 移动端面板展开时再额外缩小，避免抽屉把地球整块盖住。
+  function envZoom() {
+    return (window.innerWidth <= 900 && document.body.classList.contains('is-env')) ? 1.34 : 1;
+  }
   function fitRadius() {
     var vf = camera.fov * D2R;
     var hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
     var minF = Math.min(vf, hf);
-    return 1.1 / Math.sin(minF / 2);
+    return envZoom() * 1.15 / Math.sin(minF / 2);
   }
   var fitR = 4.4;
 
@@ -568,7 +588,8 @@
         var nx = px / w, v = 0, amp = 0.55, tot = 0;
         for (var k = 0; k < 4; k++) { v += smp(oct[k], nx, ny) * amp; tot += amp; amp *= 0.52; }
         v /= tot;
-        var a = Math.max(0, Math.min(1, (v - 0.50) / 0.22));
+        // fbm 实测均值 ≈0.42、标准差 ≈0.12；阈值按实测分布对齐，否则整张贴图都是空的
+        var a = Math.max(0, Math.min(1, (v - 0.24) / 0.26));
         a = a * a * (3 - 2 * a) * lat;
         var idx = (py * w + px) * 4;
         d[idx] = 255; d[idx + 1] = 255; d[idx + 2] = 255; d[idx + 3] = a * 255;
@@ -610,16 +631,15 @@
           ' float a1 = texture2D(uCloud, vec2(vUv.x + uDrift, vUv.y)).a;',
           ' float a2 = texture2D(uCloud, vec2(vUv.x * 2.7 - uDrift * 1.6, vUv.y * 1.8 + 0.17)).a;',
           ' float a3 = texture2D(uCloud, vec2(vUv.x * 5.6 + uDrift * 2.4, vUv.y * 3.6 - 0.11)).a;',
-          ' float base = a1 * 0.74 + a2 * 0.42 + a3 * 0.24;',
-          // 高频层当侵蚀：让边缘碎裂，不是均匀白雾
-          ' float ero = a3 * 0.62 + a2 * 0.24;',
-          ' float a = base * (0.52 + 0.78 * ero);',
-          ' a = clamp(a, 0.0, 1.0); a = a * a * (3.0 - 2.0 * a);',
+          // 归一化后再过一道软阈值：留出大块晴空，避免整球糊成白雾
+          ' float base = a1 * 0.52 + a2 * 0.30 + a3 * 0.24;',
+          ' float a = smoothstep(0.36, 0.60, base) * (0.58 + 0.42 * smoothstep(0.50, 0.92, a3));',
+          ' a = clamp(a, 0.0, 1.0);',
           // 厚薄差异：厚处实、薄处透，云顶亮、云底暗
           ' float core = smoothstep(0.42, 0.94, a);',
           ' float d = dot(normalize(vN), normalize(uSun));',
-          ' float lit = 0.20 + 1.02 * max(d, 0.0) * mix(0.80, 1.05, core);',
-          ' lit *= mix(0.58, 1.0, core);',
+          ' float lit = 0.22 + 1.30 * max(d, 0.0) * mix(0.88, 1.10, core);',
+          ' lit *= mix(0.74, 1.0, core);',
           // 夜面云只留微弱轮廓
           ' float dayMask = smoothstep(-0.20, 0.22, d);',
           ' vec3 col = vec3(0.93, 0.96, 1.0) * lit * uDim;',
@@ -681,7 +701,7 @@
     rainZones = [];
     for (var i = 0; i < 3; i++) {
       var c = cand[i] || { x: 0, y: 0 };
-      rainZones.push(new THREE.Vector4(c.x, c.y, 0.22 + rr() * 0.10, 0.34 + rr() * 0.18));
+      rainZones.push(new THREE.Vector4(c.x, c.y, 0.15 + rr() * 0.07, 0.22 + rr() * 0.12));
     }
     if (rainSys && rainSys.mat) rainSys.mat.uniforms.uZones.value = rainZones;
     updateFxState();
@@ -714,7 +734,7 @@
         ' vec3 p = position;',
         ' float ny = (p.y + uR) / (uR * 2.0), rn = length(p.xy) / uR;',
         ' float disk = smoothstep(1.0, 0.88, ny) * smoothstep(0.0, 0.12, ny) * smoothstep(1.0, 0.84, rn);',
-        ' vA = aAlpha * disk * (0.28 + 0.72 * zoneMask(p.xy)) * uGust;',
+        ' vA = aAlpha * disk * (0.05 + 0.95 * zoneMask(p.xy)) * uGust;',
         ' vHead = aHead;',
         ' gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);',
         '}'
@@ -747,9 +767,9 @@
     precipGroup.add(lines);
     // 三层景深：近景更大更快更实、中景正常、远景小而慢更淡；z 也拉开，透视自然分层
     var LY = [
-      { spd: 2.40, len: 0.055, alpha: 0.52, z: 0.13, share: 0.30 },
-      { spd: 1.55, len: 0.036, alpha: 0.33, z: 0.00, share: 0.45 },
-      { spd: 0.92, len: 0.022, alpha: 0.15, z: -0.15, share: 0.25 }
+      { spd: 2.40, len: 0.025, alpha: 0.80, z: 0.13, share: 0.30 },
+      { spd: 1.55, len: 0.016, alpha: 0.50, z: 0.00, share: 0.45 },
+      { spd: 0.92, len: 0.010, alpha: 0.22, z: -0.15, share: 0.25 }
     ];
     var x = new Float32Array(RAIN_CAP), y = new Float32Array(RAIN_CAP);
     var len = new Float32Array(RAIN_CAP), spd = new Float32Array(RAIN_CAP);
@@ -786,7 +806,7 @@
       pos[i * 3] = x[i]; pos[i * 3 + 1] = y[i];
       ph[i] = rr() * Math.PI * 2;
       var c = rr();                       // 三种粒径，避免均匀白点
-      sz[i] = c < 0.28 ? 1.65 : c < 0.72 ? 1.05 : 0.68;
+      sz[i] = c < 0.26 ? 2.05 : c < 0.70 ? 1.18 : 0.70;
       sp[i] = (0.19 + rr() * 0.12) * (0.55 + sz[i] * 0.42);
       al[i] = 0.26 + 0.30 * Math.min(1, sz[i] / 1.4);
     }
@@ -806,9 +826,9 @@
         'void main(){',
         ' vec3 p = position;',
         ' float ny = (p.y + uR) / (uR * 2.0), rn = length(p.xy) / uR;',
-        // 稀疏空间：被 coarse 门限压过的位置更淡，形成疏密
-        ' float gate = 0.58 + 0.42 * sin(p.x * 3.1 + 1.3) * sin(p.y * 2.7 - 0.8);',
-        ' vA = smoothstep(1.0, 0.86, ny) * smoothstep(0.0, 0.16, ny) * smoothstep(1.0, 0.80, rn) * aAlpha * (0.45 + 0.55 * gate);',
+        // 稀疏空间：低频门限拉开疏密，不做均匀白点阵
+        ' float gate = sin(p.x * 2.4 + 1.1) * sin(p.y * 2.1 - 0.7);',
+        ' vA = smoothstep(1.0, 0.86, ny) * smoothstep(0.0, 0.16, ny) * smoothstep(1.0, 0.80, rn) * aAlpha * smoothstep(-0.34, 0.62, gate);',
         ' vec4 mv = modelViewMatrix * vec4(p, 1.0);',
         ' gl_PointSize = uSize * aSize * (uScale / max(0.6, -mv.z));',
         ' gl_Position = projectionMatrix * mv;',
@@ -910,7 +930,7 @@
   function stepRain(sys, dt, now, on) {
     var u = sys.mat.uniforms;
     var level = rainLevel;
-    var target = on ? (level ? 0.82 : 0.58) : 0;
+    var target = on ? (level ? 0.96 : 0.70) : 0;
     u.uOpacity.value += (target - u.uOpacity.value) * Math.min(1, dt / 520);
     if (u.uOpacity.value < 0.02 && !on) { sys.obj.visible = false; return; }
     if (on) sys.obj.visible = true;
@@ -991,7 +1011,7 @@
 
   function syncFx() {
     var cover = [0.18, 0.62, 0.72, 0.60][state.weather] + fx.jitter;
-    fx.cloudTarget = fx.mode === 'none' ? 0 : Math.min(0.55, Math.max(0.10, cover));
+    fx.cloudTarget = fx.mode === 'none' ? 0 : Math.min(0.90, Math.max(0.20, cover * 1.35));
     fx.rainOn = fx.mode === 'all' && state.weather === 2;
     fx.snowOn = fx.mode === 'all' && state.weather === 3;
     if (cloudMesh) cloudMesh.visible = fx.mode !== 'none';
@@ -1169,9 +1189,12 @@
 
   function setPanel(open) {
     if (!envEl || !envToggle) return;
+    if (open && window.innerWidth <= 900) blur();
     envEl.hidden = !open;
     envToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     document.body.classList.toggle('is-env', open);
+    fitR = fitRadius();
+    if (!focused) target.r = fitR;
     if (open) {
       requestAnimationFrame(function () { envEl.classList.add('is-in'); });
     } else {
@@ -1246,7 +1269,7 @@
     if (acc > 500) {
       fpsAvg = frames * 1000 / acc;
       fpsEl.textContent = Math.round(fpsAvg) + ' fps';
-      if (!reduce && !fx.noDegrade && frames > 8) {
+      if (!reduce && !fx.noDegrade && frames > 90) {
         if (fpsAvg < 34 && fx.degrade < 1) { degradeFx(); resize(); }
         else if (fpsAvg < 30 && fx.degrade < 2) { degradeFx(); }
       }
@@ -1314,6 +1337,12 @@
       updateFxState();
     },
     setPanel: setPanel,
+    // 真实时间模式下按 UTC 采样（只用于截图与核对，默认跟随系统时钟）
+    setRealTime: function (iso) {
+      state.clockAt = iso || null;
+      state.timeMode = 'real';
+      applyTimeMode();
+    },
     // 自动化截图用：关掉自动降级，便于核对未降级时的云层分辨率
     lockQuality: function (on) { fx.noDegrade = !!on; },
     setLight: function (c) { earthMat.uniforms.uContrast.value = Math.max(0.5, Math.min(1.8, c)); },

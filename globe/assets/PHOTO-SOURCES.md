@@ -40,6 +40,7 @@
 - Unsplash：图片 CDN 可下（244,720 B），但站点接口 401，无法按许可检索到目标建筑；样图经核验为亚历山大三世桥，不采用。
 - 百度 / 搜狗 / 360 / Bing 中国 / 花瓣 / 站酷：页面可开，但版权归属不明或为付费图库，不采用；仅作检索线索。
 - GoodFreePhotos 站内没有搜索接口（`/search?q=` 返回 404，7,169 B，1.2 s），只能按「国家 / 城市」目录逐层检索。
+- 本轮复核（2026-11-04 23:00 左右）：`https://www.goodfreephotos.com/france/paris/` 返回 200；目录仅 3 张巴黎圣母院（正面 / 侧面 / 内景），第 2 页再无线索；站内搜索 `/page/search/notre-dame/` 返回 200 但 `0` 条结果。故**巴黎圣母院的季节 / 天气角度素材缺口**，按规则不补。
 
 ---
 
@@ -51,6 +52,8 @@
 | `globe/kinkakuji/assets/kj-pond.jpg` | 金阁寺（鹿苑寺）镜湖池，自池东南岸看金阁，楼阁居中、前景水面与倒影 | https://www.goodfreephotos.com/japan/kyoto/golden-pavilion-in-kyoto-japan.jpg.php | https://www.goodfreephotos.com/albums/japan/kyoto/golden-pavilion-in-kyoto-japan.jpg | CC0 / Public Domain | 站点未标注作者 | 2500 × 1788 | 1,929,973（原图，下载 62.24 s）→ 等比缩至 1200 × 858，入库 280,273 | `0e114c66bb75248a7c106e482dae37185ac4ddde907de296f93cb4c1c5c87c22` |
 | `globe/kinkakuji/assets/kj-snow.jpg` | 金阁寺雪日，自池西岸看金阁，屋面与池畔石组积雪，前景落雪 | https://www.goodfreephotos.com/japan/kyoto/kinkaku-ji-in-the-winter-in-kyoto-japan.jpg.php | https://www.goodfreephotos.com/albums/japan/kyoto/kinkaku-ji-in-the-winter-in-kyoto-japan.jpg | CC0 / Public Domain | 站点未标注作者 | 2893 × 1920 | 2,616,233（原图，55.73 s）→ 等比缩至 1200 × 796，入库 285,373 | `fa9d9a4889ae4272ace717150ce4af4869da16ec211ffa6e54055fb6e171ba5d` |
 | `globe/assets/thumbs/kinkakuji.jpg` | 地球页卡片缩略图（由上表 `kj-pond.jpg` 原图裁 2.3:1 横幅，含楼阁与池面） | 同上 | 同上 | CC0 / Public Domain | 同上 | 760 × 330 | 69,456 | `0288ecb80c5d2334115838c98624d37e05a2c1cc32c2197adc325e4415c37d70` |
+| `globe/notre-dame/assets/nd-side.jpg` | 巴黎圣母院侧立面，塞纳河一侧，可见飞扶壁与后殿 | https://www.goodfreephotos.com/france/paris/the-side-of-notre-dame-in-paris-france.jpg.php | https://www.goodfreephotos.com/albums/france/paris/the-side-of-notre-dame-in-paris-france.jpg | CC0 / Public Domain（来源页原文：*This photo is under the CC0 / Public Domain License*） | 站点未标注作者；CC0 不要求署名 | 2272 × 1704 | 989,918（原图，31.34 s）→ 等比缩至 1500 × 1125，入库 333,932 | `0b381dbfd2deab8f43224ae4a8a8f26ad12a737eb39e32e05bcca8f201aa6373` |
+| `globe/notre-dame/assets/nd-inside.jpg` | 巴黎圣母院中殿内景，束柱与高窗 | https://www.goodfreephotos.com/france/paris/inside-the-notre-dame-in-paris-france.jpg.php | https://www.goodfreephotos.com/albums/france/paris/inside-the-notre-dame-in-paris-france.jpg | CC0 / Public Domain（来源页原文同上） | 站点未标注作者；CC0 不要求署名 | 2112 × 2816 | 1,448,201（原图；首次 40 s 超时截断，续传 8.38 s 补齐）→ 等比缩至 1200 × 1600，入库 377,477 | `20a249310762ca72ea543650cf32573f4f3756c0353308b52d4c7b3c96230e54` |
 
 入库处理口径：`nd-front.jpg` 仅轻度对比度/饱和度 + JPEG 重编码；两张金阁寺为**等比缩图 + JPEG 重编码，未裁切、未拉伸、未合成**（缩略图是唯一例外，且只用于 300 px 级卡片）。
 

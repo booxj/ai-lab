@@ -15,12 +15,16 @@
 body{margin:0;background:radial-gradient(120% 60% at 50% 0%,#101418,#07080b 62%),#07080b;color:var(--ink);font-family:var(--serif);-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}
 .wrap{max-width:1240px;margin:0 auto;padding:56px 24px 80px}
-.top{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--dim)}
+.top{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--dim)}
+.backlink{margin-left:auto;min-height:40px;display:inline-flex;align-items:center;padding:0 10px;font-size:11px;letter-spacing:.12em;color:var(--muted);border:1px solid var(--line);border-radius:2px}
+.backlink:hover{color:#efd9ac;border-color:rgba(201,162,94,.5)}
+.backlink:focus-visible{outline:2px solid rgba(201,162,94,.8);outline-offset:2px}
+.lede .backlink{display:inline;min-height:0;padding:0;border:0;border-bottom:1px solid rgba(201,162,94,.5);color:#efd9ac}
 .top svg{width:20px;height:20px;opacity:.8}
 h1{margin:26px 0 12px;font-size:clamp(34px,4.2vw,52px);font-weight:400;letter-spacing:.12em;line-height:1.05}
 h1 em{font-style:normal;font-family:var(--mono);font-size:11px;letter-spacing:.32em;color:#c9a25e;display:block;margin-bottom:14px}
 .lede{max-width:62ch;margin:0;color:var(--muted);font-size:13.5px;line-height:1.9}
-.meta{display:flex;flex-wrap:wrap;gap:8px 22px;margin:22px 0 34px;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--dim)}
+.meta{display:flex;flex-wrap:wrap;gap:8px 22px;margin:22px 0 34px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--dim)}
 .meta b{color:#c9a25e;font-weight:400}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
 .card{
@@ -35,13 +39,13 @@ h1 em{font-style:normal;font-family:var(--mono);font-size:11px;letter-spacing:.3
 .card__num{position:absolute;left:12px;top:10px;z-index:2;font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:#efd9ac}
 .card__body{position:relative;display:block;z-index:2;padding:0 14px 16px;margin-top:-34px}
 .card__cn{display:block;font-size:20px;letter-spacing:.16em;color:#f4ecdf}
-.card__en{display:block;margin-top:3px;font-family:var(--mono);font-size:8.5px;letter-spacing:.26em;color:#c9a25e}
-.card__meta{display:block;margin-top:8px;font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;color:rgba(236,231,220,.52);line-height:1.7}
+.card__en{display:block;margin-top:3px;font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:#c9a25e}
+.card__meta{display:block;margin-top:8px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:rgba(236,231,220,.6);line-height:1.7}
 .card__sw{display:flex;gap:3px;margin-top:10px}
 .card__sw i{display:block;width:22px;height:4px;border-radius:1px}
-.card__go{position:absolute;right:12px;bottom:12px;font-family:var(--mono);font-size:8px;letter-spacing:.16em;color:rgba(236,231,220,.38)}
+.card__go{position:absolute;right:12px;bottom:12px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:rgba(236,231,220,.5)}
 .card:hover .card__go{color:#efd9ac}
-.foot{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px 26px;font-family:var(--mono);font-size:8.5px;line-height:1.8;letter-spacing:.1em;color:var(--dim)}
+.foot{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px 26px;font-family:var(--mono);font-size:10.5px;line-height:1.8;letter-spacing:.08em;color:var(--dim)}
 .foot b{color:var(--muted);font-weight:400}
 @media (max-width:560px){
   .wrap{padding:34px 16px 56px}
@@ -55,9 +59,10 @@ h1 em{font-style:normal;font-family:var(--mono);font-size:11px;letter-spacing:.3
   <div class="top">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M3.4 12h17.2M12 3.4v17.2"/><path d="M6 18.4c3.2-3.6 9-3.6 12 0" opacity=".6"/></svg>
     <span>AI-LAB ATLAS / 07 HALLS</span>
+    <a class="backlink" href="../globe/index.html">← 返回地球总入口</a>
   </div>
   <h1><em>SEVEN CONTINENTS · SEVEN HALLS</em>七洲展厅</h1>
-  <p class="lede">每洲一套「外景 + 内景」动线：外景是四道能力门（影像 / 网页 / 幻灯片 / 游戏），内景是该洲的作品陈列。七洲共用一套壳层，只换 token——色板、分层深度、材质纹理、动效曲线，以及由这些参数长出来的门形。</p>
+  <p class="lede">二级页面：七洲展厅。<a class="backlink" href="../globe/index.html">地球</a>是总入口，这里按洲进入各展厅；每洲一套「外景 + 内景」动线——外景是四道能力门（影像 / 网页 / 幻灯片 / 游戏），内景是该洲的作品陈列。七洲共用一套壳层，只换 token。</p>
   <div class="meta"><span><b>0</b> 外部依赖</span><span><b>7</b> 洲 · 28 道门</span><span><b>84</b> 件样张</span><span>离线可开 · 1440 / 390 双断点</span></div>
 
   <div class="grid" id="grid"></div>
