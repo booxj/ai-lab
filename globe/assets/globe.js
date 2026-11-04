@@ -281,7 +281,8 @@
   var hoverTimer = null;
 
   var THUMBS = {
-    'notre-dame': '<img src="assets/thumbs/notre-dame.jpg" alt="巴黎圣母院西立面近景" loading="lazy">'
+    'notre-dame': '<img src="assets/thumbs/notre-dame.jpg" alt="巴黎圣母院西立面近景" loading="lazy">',
+    'kinkakuji': '<img src="assets/thumbs/kinkakuji.jpg" alt="金阁寺镜湖池近景" loading="lazy">'
   };
 
   function focus(item, fromHover) {
@@ -301,7 +302,13 @@
     if (item.status === 'open') {
       cardState.textContent = '已建成 · 场景可进入';
       cardEnter.hidden = false;
-      cardEnter.href = item.slug + '/index.html';
+      // 把当前时刻 / 季节 / 天气 / 种子一并带给场景页，保证「云、光、雨雪」同一口径
+      cardEnter.href = item.slug + '/index.html'
+        + '?h=' + state.hour
+        + '&s=' + SEASONS[state.season][0]
+        + '&w=' + WEATHERS[state.weather][0]
+        + '&seed=' + fx.seed
+        + '&fx=' + fx.mode;
     } else {
       cardState.textContent = '标记已登记 · 场景筹备中';
       cardEnter.hidden = true;

@@ -1,0 +1,243 @@
+:root{
+  --ink:#07080b;
+  --paper:#ece9df;
+  --muted:#a9a79a;
+  --dim:#6f7064;
+  --line:rgba(236,233,223,.13);
+  --warm:#d9a84e;
+  --glow:#ffd9a0;
+  --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+  --serif:"Source Serif 4","Iowan Old Style",Georgia,"Songti SC","STSong","Noto Serif CJK SC",serif;
+  /* 默认：黄昏 */
+  --sky-top:#0c1520; --sky-mid:#4e4a44; --sky-bot:#d9ab77;
+  --gold-lit:#e6c274; --gold-mid:#8a7239; --gold-dark:#2c2822;
+  --moss:#4d5c3c; --haze:#cfc6ad;
+  --raydeg:156deg; --sun-op:.5;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;font-family:var(--serif);color:var(--paper);overflow:hidden;
+  background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 58%,var(--sky-bot) 100%);
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+/* ---------- 时刻色板 ---------- */
+body.t-dawn{--sky-top:#101a2a;--sky-mid:#5c5354;--sky-bot:#d7a878;--gold-lit:#d3bb8e;--gold-mid:#7e6c46;--gold-dark:#33302c;--moss:#4b5942;--haze:#cdbfa8;--raydeg:28deg;--sun-op:.52}
+body.t-day{--sky-top:#1f3a4c;--sky-mid:#63808c;--sky-bot:#b8c8cc;--gold-lit:#e9d7a8;--gold-mid:#948049;--gold-dark:#4a4740;--moss:#5b6c46;--haze:#ccd4cd;--raydeg:74deg;--sun-op:.28}
+body.t-dusk{--sky-top:#0c1520;--sky-mid:#4e4a44;--sky-bot:#d9ab77;--gold-lit:#e6c274;--gold-mid:#8a7239;--gold-dark:#2c2822;--moss:#4d5c3c;--haze:#cfc6ad;--raydeg:156deg;--sun-op:.5}
+body.t-night{--sky-top:#02060c;--sky-mid:#07101c;--sky-bot:#142436;--gold-lit:#6a6a5e;--gold-mid:#353a42;--gold-dark:#15191f;--moss:#283231;--haze:#0e1822;--raydeg:0deg;--sun-op:0}
+
+/* ---------- 舞台 ---------- */
+.frame{position:fixed;inset:0;overflow:hidden}
+.stage{position:absolute;inset:0}
+.wing{
+  width:100%;height:100%;display:block;
+  transition:transform 1.15s cubic-bezier(.16,.84,.3,1),filter .9s ease;
+  will-change:transform;
+}
+.frame.is-zoom .wing{transform:scale(1.46)}
+
+/* 两套实拍取景：晴日照常，雪日交叉淡入 */
+.scene{transition:opacity .85s ease}
+.scene--snow{opacity:0;pointer-events:none}
+body.w-snow .scene--pond{opacity:0;pointer-events:none}
+body.w-snow .scene--snow{opacity:1;pointer-events:auto}
+.frame.is-zoom .scene{transition:opacity .85s ease,transform 1.15s cubic-bezier(.16,.84,.3,1)}
+
+/* 云层：两层不同尺度的柔边噪声（CSS 渐变近似），只压天光不糊地景 */
+.clouds{
+  position:fixed;inset:-8% -12%;pointer-events:none;
+  opacity:0;transition:opacity 1.1s ease;
+  background:
+    radial-gradient(62% 40% at 22% 16%,rgba(255,255,255,.34) 0%,rgba(255,255,255,.08) 46%,transparent 72%),
+    radial-gradient(54% 34% at 68% 10%,rgba(255,255,255,.28) 0%,rgba(255,255,255,.06) 52%,transparent 74%),
+    radial-gradient(80% 42% at 50% 24%,rgba(214,222,226,.22) 0%,transparent 70%);
+  filter:blur(18px) saturate(.9);
+}
+body.w-cloud .clouds{opacity:.5}
+body.w-rain .clouds{opacity:.62}
+body.w-snow .clouds{opacity:.42}
+body.t-night .clouds{opacity:.12}
+body.w-rain.t-night .clouds,body.w-cloud.t-night .clouds{opacity:.18}
+body.fx-none .clouds{opacity:0 !important}
+
+/* 斜光 / 雾 / 湿反光 */
+.rays{
+  position:fixed;inset:-10%;pointer-events:none;mix-blend-mode:screen;opacity:.5;
+  background:linear-gradient(var(--raydeg),transparent 26%,rgba(255,222,168,.15) 44%,rgba(255,196,132,.06) 56%,transparent 70%);
+  filter:blur(9px);transition:opacity .9s ease;
+}
+body.w-cloud .rays{opacity:.22}
+body.w-rain .rays{opacity:.12}
+body.w-snow .rays{opacity:.18}
+body.t-night .rays{opacity:.04}
+
+.fog{position:fixed;left:0;right:0;bottom:0;height:42vh;pointer-events:none;opacity:.36;
+  background:
+    radial-gradient(70% 54% at 50% 100%,var(--haze) 0%,transparent 68%),
+    linear-gradient(180deg,transparent,rgba(20,22,18,.2) 72%,rgba(10,12,10,.48));
+  filter:blur(6px);transition:opacity .9s ease}
+body.w-cloud .fog{opacity:.58}
+body.w-rain .fog{opacity:.74}
+body.w-snow .fog{opacity:.72}
+
+.wet{position:fixed;left:0;right:0;bottom:0;height:20vh;pointer-events:none;opacity:0;mix-blend-mode:screen;
+  background:repeating-linear-gradient(90deg,rgba(255,214,168,.09) 0 2px,transparent 2px 26px);
+  transition:opacity .9s ease}
+body.w-rain .wet{opacity:.26}
+
+/* 雨雪粒子画布：数量与淡入淡出由 kj.js 控制 */
+.wx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;opacity:1}
+body.fx-none .wx{opacity:0}
+body.fx-cloud .wx{opacity:0}
+
+.motes{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.mote{position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(255,232,200,.5);opacity:.16;animation:drift linear infinite}
+@keyframes drift{
+  0%{transform:translate3d(0,0,0);opacity:0}
+  18%{opacity:.22}
+  82%{opacity:.18}
+  100%{transform:translate3d(18px,-46px,0);opacity:0}
+}
+
+.grain{position:fixed;inset:0;pointer-events:none;opacity:.07;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+  background-size:160px 160px}
+.vig{position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(116% 92% at 46% 54%,transparent 44%,rgba(4,5,6,.4) 82%,rgba(3,3,5,.6) 100%)}
+
+/* 天气 / 季节 / 夜晚对画面的整体滤镜 */
+body.w-cloud{--w-filter:saturate(.9) brightness(.96)}
+body.w-rain{--w-filter:saturate(.86) brightness(.88) contrast(1.03)}
+body.w-snow{--w-filter:saturate(.72) brightness(1.02)}
+body.s-spring{--s-filter:hue-rotate(-3deg) saturate(1.03)}
+body.s-summer{--s-filter:saturate(1.06)}
+body.s-autumn{--s-filter:sepia(.05) saturate(1.05)}
+body.s-winter{--s-filter:saturate(.9) brightness(1.02)}
+body.t-night{--n-filter:brightness(.9) saturate(.94)}
+.wing{filter:var(--n-filter,none) var(--w-filter,none) var(--s-filter,none)}
+
+/* ---------- 标记 ---------- */
+.marks .mark{cursor:pointer;outline:none}
+.marks .mark .hit{fill:transparent}
+.marks .mark text{
+  font-family:var(--serif);font-size:11px;letter-spacing:.26em;
+  fill:#fff;opacity:.62;mix-blend-mode:difference;
+  paint-order:stroke;transition:opacity .35s ease,letter-spacing .35s ease;
+  dominant-baseline:middle;
+}
+.marks .mark .hot{fill:url(#hotGrad);opacity:0;mix-blend-mode:screen;transition:opacity .4s ease}
+.marks .mark:hover text,.marks .mark:focus-visible text{opacity:.98;letter-spacing:.32em}
+.marks .mark:hover .hot,.marks .mark:focus-visible .hot{opacity:.18}
+.frame.is-zoom .marks .mark{opacity:.14;transition:opacity .5s ease}
+.frame.is-zoom .marks .mark.is-active{opacity:0;transition:opacity .35s ease}
+
+/* ---------- 页眉 ---------- */
+.top{position:fixed;left:0;right:0;top:0;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:20px 26px;pointer-events:none}
+.top>*{pointer-events:auto}
+.crumb{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;color:rgba(236,233,223,.72)}
+.crumb svg{width:20px;height:20px;color:var(--dim)}
+.crumb__sub{display:block;margin-top:4px;font-size:7.5px;letter-spacing:.2em;color:var(--dim)}
+.badges{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.badge{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;color:rgba(236,233,223,.6);
+  border:1px solid rgba(236,233,223,.14);padding:4px 8px;border-radius:2px;background:rgba(8,10,14,.3);backdrop-filter:blur(4px)}
+.badge--sim{color:rgba(217,168,78,.92);border-color:rgba(217,168,78,.26)}
+.badge--link:hover{color:var(--paper);border-color:rgba(236,233,223,.34)}
+
+/* ---------- 环境控制 ---------- */
+.env{position:fixed;right:26px;top:74px;width:252px;padding:10px 12px;
+  border:1px solid rgba(236,233,223,.12);border-radius:3px;background:rgba(9,11,15,.52);backdrop-filter:blur(10px);
+  transition:opacity .4s ease}
+.env__row{display:flex;align-items:center;gap:9px;margin:7px 0}
+.env__k{font-family:var(--mono);font-size:8px;letter-spacing:.16em;color:rgba(236,233,223,.34);width:24px;flex:none}
+.env__v{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;color:rgba(236,233,223,.6);min-width:36px}
+.env__seed{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:104px}
+.env__reset{font-family:var(--mono);font-size:8px;letter-spacing:.08em;color:rgba(236,233,223,.5);
+  border:1px solid rgba(236,233,223,.14);border-radius:2px;padding:3px 6px;margin-left:auto}
+.env__reset:hover{color:var(--paper)}
+.env__range{-webkit-appearance:none;appearance:none;flex:1;height:2px;background:rgba(236,233,223,.18);border-radius:2px;outline:none}
+.env__range::-webkit-slider-thumb{-webkit-appearance:none;width:9px;height:9px;border-radius:50%;background:var(--glow);box-shadow:0 0 10px rgba(217,168,78,.55);cursor:pointer}
+.env__range::-moz-range-thumb{width:9px;height:9px;border:0;border-radius:50%;background:var(--glow)}
+.chips{display:flex;gap:4px;flex:1;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:8px;letter-spacing:.1em;color:rgba(236,233,223,.46);
+  border:1px solid rgba(236,233,223,.12);border-radius:2px;padding:3px 6px;transition:color .2s,border-color .2s,background .2s}
+.chip:hover{color:rgba(236,233,223,.82)}
+.chip.is-on{color:#ffeac2;border-color:rgba(217,168,78,.5);background:rgba(217,168,78,.1)}
+
+/* ---------- 题签 ---------- */
+.title{position:fixed;left:5.4%;bottom:8%;max-width:40ch;pointer-events:none;transition:opacity .5s ease}
+body.is-sheet .title{opacity:.16}
+.title__eyebrow{margin:0 0 11px;font-family:var(--mono);font-size:8.5px;letter-spacing:.28em;color:rgba(217,168,78,.72)}
+.title__cn{margin:0;font-size:clamp(34px,4.2vw,58px);font-weight:400;letter-spacing:.16em;line-height:1.04;color:rgba(246,239,226,.95);text-shadow:0 2px 34px rgba(0,0,0,.5)}
+.title__en{margin:12px 0 0;font-family:var(--mono);font-size:9px;letter-spacing:.3em;color:rgba(236,233,223,.48)}
+.title__meta{margin:14px 0 0;font-family:var(--mono);font-size:8px;letter-spacing:.12em;color:rgba(236,233,223,.36);line-height:1.9}
+
+.note{position:fixed;right:26px;bottom:20px;display:flex;flex-direction:column;align-items:flex-end;gap:3px;
+  font-family:var(--mono);font-size:8px;letter-spacing:.1em;color:rgba(236,233,223,.34);pointer-events:none}
+.note__dim{color:rgba(236,233,223,.22)}
+
+/* ---------- 能力面板 ---------- */
+.sheet{
+  position:fixed;right:26px;top:50%;transform:translateY(-46%);width:320px;
+  border:1px solid rgba(236,233,223,.16);border-radius:3px;padding:22px 22px 18px;
+  background:linear-gradient(180deg,rgba(14,17,22,.94),rgba(9,11,15,.96));backdrop-filter:blur(14px);
+  box-shadow:0 30px 80px rgba(0,0,0,.5);
+  opacity:0;transition:opacity .4s ease,transform .5s cubic-bezier(.16,.84,.3,1);
+}
+.sheet[hidden]{display:none}
+.sheet.is-in{opacity:1;transform:translateY(-50%)}
+.sheet__close{position:absolute;right:10px;top:8px;font-size:18px;line-height:1;color:rgba(236,233,223,.4)}
+.sheet__close:hover{color:var(--paper)}
+.sheet__k{margin:0;font-family:var(--mono);font-size:8px;letter-spacing:.26em;color:rgba(217,168,78,.82)}
+.sheet__h{margin:10px 0 4px;font-size:24px;font-weight:400;letter-spacing:.12em}
+.sheet__en{margin:0;font-family:var(--mono);font-size:8px;letter-spacing:.24em;color:rgba(236,233,223,.4)}
+.sheet__d{margin:14px 0 0;font-size:12px;line-height:1.9;color:rgba(236,233,223,.7)}
+.sheet__case{margin:12px 0 0;font-family:var(--mono);font-size:8px;letter-spacing:.1em;color:rgba(236,233,223,.36)}
+.sheet__go{display:inline-block;margin-top:16px;padding-bottom:2px;font-family:var(--mono);font-size:9px;letter-spacing:.16em;
+  color:rgba(255,226,178,.94);border-bottom:1px solid rgba(217,168,78,.32)}
+.sheet__go:hover{color:#fff5e0;border-color:rgba(255,226,178,.8)}
+.sheet__foot{margin:14px 0 0;font-family:var(--mono);font-size:7.5px;letter-spacing:.06em;color:rgba(236,233,223,.26)}
+
+/* ---------- 载入 ---------- */
+.loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;background:var(--sky-top);z-index:40;
+  font-family:var(--mono);font-size:9px;letter-spacing:.24em;color:var(--dim);transition:opacity .8s ease}
+.loader span{width:5px;height:5px;border-radius:50%;background:var(--warm);animation:pulse 1.2s ease-in-out infinite}
+.loader.is-off{opacity:0;pointer-events:none}
+.loader[hidden]{display:none}
+@keyframes pulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+
+/* ---------- 390 移动端 ---------- */
+@media (max-width:700px){
+  body{background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 56%,var(--sky-bot) 100%)}
+  .top{padding:14px 14px 0}
+  .crumb{font-size:8.5px;letter-spacing:.2em}
+  .crumb__sub{font-size:7px}
+  .badge{font-size:7.5px;padding:3px 6px}
+  .badge--link{display:none}
+  .title{left:14px;right:14px;top:70px;bottom:auto;max-width:none}
+  .title__eyebrow{font-size:7.5px;margin-bottom:8px;letter-spacing:.22em}
+  .title__cn{font-size:30px;letter-spacing:.1em}
+  .title__en{font-size:7px;letter-spacing:.18em;margin-top:8px}
+  .title__meta{font-size:7px;letter-spacing:.06em;margin-top:8px;line-height:1.8}
+  .env{left:12px;right:12px;top:196px;bottom:auto;width:auto;padding:8px 10px}
+  .env__row{margin:5px 0}
+  .chip{font-size:7.5px;padding:3px 5px}
+  .note{display:none}
+  .sheet{left:12px;right:12px;top:auto;bottom:0;width:auto;transform:translateY(18px);border-radius:4px 4px 0 0;padding:18px 18px 16px}
+  .sheet.is-in{transform:translateY(0)}
+  .sheet__h{font-size:21px}
+  .sheet__d{font-size:11.5px}
+  body.is-sheet .env{opacity:0;pointer-events:none}
+  .marks .mark text{font-size:16px;letter-spacing:.14em}
+  .marks .mark:hover text,.marks .mark:focus-visible text{letter-spacing:.18em}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .wing,.marks .mark text,.sheet,.loader,.scene{transition:none}
+  .mote{display:none}
+  .loader span{animation:none}
+  .clouds{transition:none}
+}

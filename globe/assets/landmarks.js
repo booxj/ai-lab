@@ -10,11 +10,11 @@
      lat/lon   经纬度（十进制度，北纬/东经为正）
      status    open = 已建成场景；planned = 仅标记，尚未开放
      blurb     一句话概述（≤ 34 字）
-     thumb     'notre-dame' 等，用于卡片缩略图（自绘示意，非实拍）
+     thumb     'notre-dame' / 'kinkakuji'，用于卡片缩略图（本地图片，非外链）
      cases     四类能力对应的 case-id（与 cases/c1..c4 的题面编号一致）
    ============================================================ */
 window.LANDMARKS = {
-  note: '首版仅巴黎圣母院开放；其余为标记点，状态 planned。',
+  note: '已开放：巴黎圣母院、金阁寺。其余为标记点，状态 planned；无干净素材的地标只留点位，不做自绘替代。',
   items: [
     {
       id: 'notre-dame', slug: 'notre-dame',
@@ -27,6 +27,16 @@ window.LANDMARKS = {
         web: 'c1-notre-dame-web-001',
         deck: 'c2-notre-dame-deck-001',
         game: 'c4-notre-dame-game-001'
+      }
+    },
+    { id: 'kinkakuji', slug: 'kinkakuji', country: '日本', countryEn: 'JAPAN', city: '京都', cityEn: 'KYOTO',
+      name: '金阁寺', nameEn: 'KINKAKU-JI', lat: 35.0394, lon: 135.7292, status: 'open', thumb: 'kinkakuji',
+      blurb: '镜湖池畔的金箔楼阁，晴日与雪日两套实拍取景。',
+      cases: {
+        video: 'c3-kinkakuji-film-001',
+        web: 'c1-kinkakuji-web-001',
+        deck: 'c2-kinkakuji-deck-001',
+        game: 'c4-kinkakuji-game-001'
       }
     },
     { id: 'sagrada', slug: 'sagrada', country: '西班牙', countryEn: 'SPAIN', city: '巴塞罗那', cityEn: 'BARCELONA',
