@@ -28,15 +28,15 @@ h1 em{font-style:normal;font-family:var(--mono);font-size:11px;letter-spacing:.3
   background:#0b0d10;transition:border-color .25s,transform .35s cubic-bezier(.16,.84,.3,1);
 }
 .card:hover{border-color:rgba(201,162,94,.4);transform:translateY(-3px)}
-.card__img{position:relative;aspect-ratio:16/10;overflow:hidden;background:#111}
+.card__img{position:relative;display:block;aspect-ratio:16/10;overflow:hidden;background:#111}
 .card__img img{width:100%;height:100%;object-fit:cover;filter:brightness(.66) saturate(.8);transition:filter .4s,transform .7s cubic-bezier(.16,.84,.3,1)}
 .card:hover .card__img img{filter:brightness(.8) saturate(.95);transform:scale(1.03)}
 .card__img::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,7,10,.1),rgba(6,7,10,.86))}
 .card__num{position:absolute;left:12px;top:10px;z-index:2;font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:#efd9ac}
-.card__body{position:relative;z-index:2;padding:0 14px 14px;margin-top:-34px}
-.card__cn{font-size:20px;letter-spacing:.16em;color:#f4ecdf}
+.card__body{position:relative;display:block;z-index:2;padding:0 14px 16px;margin-top:-34px}
+.card__cn{display:block;font-size:20px;letter-spacing:.16em;color:#f4ecdf}
 .card__en{display:block;margin-top:3px;font-family:var(--mono);font-size:8.5px;letter-spacing:.26em;color:#c9a25e}
-.card__meta{margin-top:8px;font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;color:rgba(236,231,220,.52);line-height:1.7}
+.card__meta{display:block;margin-top:8px;font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;color:rgba(236,231,220,.52);line-height:1.7}
 .card__sw{display:flex;gap:3px;margin-top:10px}
 .card__sw i{display:block;width:22px;height:4px;border-radius:1px}
 .card__go{position:absolute;right:12px;bottom:12px;font-family:var(--mono);font-size:8px;letter-spacing:.16em;color:rgba(236,231,220,.38)}
@@ -73,7 +73,7 @@ h1 em{font-style:normal;font-family:var(--mono);font-size:11px;letter-spacing:.3
 var grid=document.getElementById('grid');
 grid.innerHTML=ATLAS.map(function(a){
   var c=HALLS[a[0]];
-  var kb=c.assets.reduce(function(s,x){return s+x[1];},0);
+  var kb=c.assets.reduce(function(s,x){return s+x[1];},0)+96.5;
   return '<a class="card" href="./'+a[0]+'/index.html">'+
     '<span class="card__img"><img src="./'+a[0]+'/assets/facade.webp" alt="'+a[3]+' '+c.style+'" loading="lazy" decoding="async"><span class="card__num">'+a[1]+' / '+a[2]+'</span></span>'+
     '<span class="card__body"><span class="card__cn">'+c.hall+'</span><span class="card__en">'+c.en+' · '+c.style+'</span>'+
