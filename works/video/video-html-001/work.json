@@ -1,0 +1,23 @@
+{
+  "id": "video-html-001",
+  "title": "洱海环海 / Erhai Loop",
+  "type": "video",
+  "capability": "video",
+  "model": "HTML",
+  "series": null,
+  "tags": [
+    "旅行",
+    "卫星地图",
+    "洱海",
+    "实拍作品"
+  ],
+  "status": "final",
+  "date": "2026-11-06",
+  "createdAt": "2026-11-06T11:05+08:00",
+  "currentVersion": "20261106",
+  "versions": [
+    "20261106"
+  ],
+  "prompt": "使用HTML网页代码+SVG、Canvas等WEB技术完成视频制作。做一个大理洱海环海游的介绍视频，需要结合卫星地图路线，插入各个景点位置、照片等，1~2分钟左右，最好能配一个比较轻快的音乐。",
+  "promptSummary": "大理洱海环海游介绍视频：卫星地图路线 + 景点位置与照片 + 轻快配乐"
+}

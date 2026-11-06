@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI LAB · 跳转中</title>
+<link rel="icon" href="data:,">
+<meta name="robots" content="noindex">
+<style>
+  html,body{margin:0;height:100%;background:#05060a;color:#e9e4d8;
+    font-family:"Helvetica Neue","PingFang SC","Hiragino Sans GB",sans-serif}
+  body{display:flex;align-items:center;justify-content:center;text-align:center;
+    -webkit-font-smoothing:antialiased}
+  .in{max-width:520px;padding:32px}
+  b{font-family:"Didot","Songti SC",serif;font-weight:400;font-size:18px;
+    letter-spacing:.4em;display:block}
+  p{margin-top:18px;font-size:11px;line-height:2;letter-spacing:.14em;
+    color:rgba(233,228,216,.5)}
+  a{color:#e9e4d8;text-decoration:none;border-bottom:1px solid rgba(233,228,216,.24);
+    padding-bottom:2px}
+  .err{color:#e0796a}
+</style>
+</head>
+<body>
+<div class="in">
+  <b>AI LAB</b>
+  <p id="msg">正在跳转到规范地址…</p>
+  <p><a id="go" href="index.html#/">回到星图</a></p>
+</div>
+<script>
+/* 兼容旧地址：work.html?id=<work-id>[&v=<version>] -> index.html#/<capability>/<id>[/<version>]
+   规范地址统一由 index.html 的 hash 路由承担，本文件只做跳转，不再渲染详情。 */
+(function(){
+  "use strict";
+  var q = new URLSearchParams(location.search);
+  var id = q.get("id");
+  var ver = q.get("v") || q.get("version");
+  if (!id){
+    location.replace("index.html#/");
+    return;
+  }
+  function go(doc){
+    var entry = null;
+    for (var i = 0; i < (doc.works || []).length; i++){
+      if (doc.works[i].id === id){ entry = doc.works[i]; break; }
+    }
+    if (!entry){
+      document.getElementById("msg").className = "err";
+      document.getElementById("msg").textContent = "未找到作品：" + id;
+      return;
+    }
+    var url = "index.html#/" + entry.capability + "/" + encodeURIComponent(entry.id) +
+      (ver ? "/" + encodeURIComponent(ver) : "");
+    location.replace(url);
+  }
+  if (location.protocol !== "file:"){
+    fetch("data/index.json", {cache:"no-cache"}).then(function(r){
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(go).catch(fail);
+  } else if (window.AI_LAB_INDEX){
+    go(window.AI_LAB_INDEX);
+  } else {
+    var s = document.createElement("script");
+    s.src = "data/index.js";
+    s.onload = function(){ go(window.AI_LAB_INDEX || {works:[]}); };
+    s.onerror = fail;
+    document.head.appendChild(s);
+  }
+  function fail(err){
+    document.getElementById("msg").className = "err";
+    document.getElementById("msg").textContent =
+      "跳转失败：" + (err && err.message ? err.message : err);
+  }
+})();
+</script>
+</body>
+</html>

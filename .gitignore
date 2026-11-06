@@ -5,7 +5,6 @@ node_modules/
 # 截图迭代产物与录屏原片（交付截图请放 temp 工作区，不入库）
 .screenshots/
 shots/
-*.mp4
 *.mov
 *.webm
 
@@ -13,5 +12,13 @@ shots/
 .DS_Store
 .cache/
 
-# 超过 5 MB 的二进制走 LFS 或外链，不直接入库（见 docs/CONVENTIONS.md 第 7 节）
-# 例外：globe/assets 下的地球贴图与其 base64 运行时文件已按需分级加载
+# 视频原片与 mp4 导出件不入库；works/ 只保留 HTML 实体、海报、缩略图与 JSON
+*.mp4
+
+# 导出版：由 works/ 经 tools/export_work.py 生成，与 works/ 内容重复，不入库
+dist/
+
+# 迁移备份与软删除回收站：本地恢复用，不入库
+# - backup/pre-migration-20261106/ 是迁移前的旧站快照（旧文件在 git 历史里仍可找回）
+# - backup/placeholders-removed/ 是 14 件占位件的软删除副本
+backup/

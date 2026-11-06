@@ -1,0 +1,23 @@
+{
+  "id": "video-html-002",
+  "title": "霞浦自驾 / Xiapu Drive",
+  "type": "video",
+  "capability": "video",
+  "model": "HTML",
+  "series": null,
+  "tags": [
+    "旅行",
+    "自驾",
+    "卫星地图",
+    "实拍作品"
+  ],
+  "status": "final",
+  "date": "2026-11-06",
+  "createdAt": "2026-11-06T13:20+08:00",
+  "currentVersion": "20261106",
+  "versions": [
+    "20261106"
+  ],
+  "prompt": "使用HTML网页代码+SVG、Canvas等WEB技术完成视频制作。做一个霞浦自驾游的介绍视频，从霞浦的白玉兰酒店出发，分东西南北四条自驾路线，需要结合卫星地图路线，插入各个景点位置、照片等，1~2分钟左右，最好能配一个比较轻快的音乐。",
+  "promptSummary": "霞浦自驾游介绍视频：白玉兰酒店出发，东西南北四条路线 + 卫星地图 + 景点照片 + 轻快配乐"
+}

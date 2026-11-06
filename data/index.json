@@ -1,0 +1,116 @@
+{
+ "generatedAt": "2026-11-06T17:09:49+08:00",
+ "capabilities": [
+  {
+   "id": "image",
+   "name": "影像",
+   "en": "IMAGE",
+   "color": "#e0a45e",
+   "order": 1,
+   "enabled": true,
+   "count": 0
+  },
+  {
+   "id": "video",
+   "name": "视频",
+   "en": "VIDEO",
+   "color": "#6fa8e8",
+   "order": 2,
+   "enabled": true,
+   "count": 2
+  },
+  {
+   "id": "web",
+   "name": "网页",
+   "en": "WEB",
+   "color": "#57c8b0",
+   "order": 3,
+   "enabled": true,
+   "count": 0
+  },
+  {
+   "id": "ppt",
+   "name": "讲义",
+   "en": "PPT",
+   "color": "#b99be6",
+   "order": 4,
+   "enabled": true,
+   "count": 0
+  },
+  {
+   "id": "game",
+   "name": "游戏",
+   "en": "GAME",
+   "color": "#e0796a",
+   "order": 5,
+   "enabled": true,
+   "count": 0
+  }
+ ],
+ "works": [
+  {
+   "id": "video-html-001",
+   "title": "洱海环海 / Erhai Loop",
+   "capability": "video",
+   "type": "video",
+   "model": "HTML",
+   "series": null,
+   "tags": [
+    "旅行",
+    "卫星地图",
+    "洱海",
+    "实拍作品"
+   ],
+   "status": "final",
+   "date": "2026-11-06",
+   "createdAt": "2026-11-06T11:05+08:00",
+   "currentVersion": "20261106",
+   "versionCount": 1,
+   "versions": [
+    {
+     "version": "20261106",
+     "at": "2026-11-06T11:05+08:00",
+     "status": "final",
+     "thumb": "works/video/video-html-001/20261106/thumb.jpg",
+     "poster": "works/video/video-html-001/20261106/poster.jpg",
+     "video": "works/video/video-html-001/20261106/video.mp4",
+     "images": []
+    }
+   ],
+   "thumb": "works/video/video-html-001/20261106/thumb.jpg",
+   "promptSummary": "大理洱海环海游介绍视频：卫星地图路线 + 景点位置与照片 + 轻快配乐"
+  },
+  {
+   "id": "video-html-002",
+   "title": "霞浦自驾 / Xiapu Drive",
+   "capability": "video",
+   "type": "video",
+   "model": "HTML",
+   "series": null,
+   "tags": [
+    "旅行",
+    "自驾",
+    "卫星地图",
+    "实拍作品"
+   ],
+   "status": "final",
+   "date": "2026-11-06",
+   "createdAt": "2026-11-06T13:20+08:00",
+   "currentVersion": "20261106",
+   "versionCount": 1,
+   "versions": [
+    {
+     "version": "20261106",
+     "at": "2026-11-06T13:20+08:00",
+     "status": "final",
+     "thumb": "works/video/video-html-002/20261106/thumb.jpg",
+     "poster": "works/video/video-html-002/20261106/poster.jpg",
+     "video": "works/video/video-html-002/20261106/video.mp4",
+     "images": []
+    }
+   ],
+   "thumb": "works/video/video-html-002/20261106/thumb.jpg",
+   "promptSummary": "霞浦自驾游介绍视频：白玉兰酒店出发，东西南北四条路线 + 卫星地图 + 景点照片 + 轻快配乐"
+  }
+ ]
+}

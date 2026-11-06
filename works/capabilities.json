@@ -1,0 +1,51 @@
+{
+  "order": [
+    "image",
+    "video",
+    "web",
+    "ppt",
+    "game"
+  ],
+  "items": [
+    {
+      "id": "image",
+      "name": "影像",
+      "en": "IMAGE",
+      "color": "#e0a45e",
+      "order": 1,
+      "enabled": true
+    },
+    {
+      "id": "video",
+      "name": "视频",
+      "en": "VIDEO",
+      "color": "#6fa8e8",
+      "order": 2,
+      "enabled": true
+    },
+    {
+      "id": "web",
+      "name": "网页",
+      "en": "WEB",
+      "color": "#57c8b0",
+      "order": 3,
+      "enabled": true
+    },
+    {
+      "id": "ppt",
+      "name": "讲义",
+      "en": "PPT",
+      "color": "#b99be6",
+      "order": 4,
+      "enabled": true
+    },
+    {
+      "id": "game",
+      "name": "游戏",
+      "en": "GAME",
+      "color": "#e0796a",
+      "order": 5,
+      "enabled": true
+    }
+  ]
+}
