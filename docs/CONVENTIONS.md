@@ -1,7 +1,7 @@
 # AI LAB · 目录与素材约定（CONVENTIONS）
 
 > 本文件是唯一的事实来源。新增作品、替换素材、接入真实内容之前，先对照本页逐条检查。
-> 版本：v3（2026-11-06，改为「能力 → 作品 → 版本」三级目录，星图改为主干 / 短枝 / 版本叶）
+> 版本：v4（2026-11-08，补：版本页只介绍本版、extras 废弃、默认不生成 mp4）
 
 ---
 
@@ -21,7 +21,7 @@ ai-lab/
 │           └── <version>/      # YYYYMMDD
 │               ├── prompt.json # 该版本提示词快照
 │               ├── 01.jpg …    # 详情图（从 01 连续）
-│               ├── video.mp4   # 视频类
+│               ├── video.mp4   # 可选：仅在明确要求时生成
 │               ├── poster.jpg  # 视频海报
 │               └── thumb.jpg   # 缩略图 640×400
 ├── data/                       # 构建产物，全部由 tools/ 生成（勿手改）
@@ -166,9 +166,15 @@ works/<capability>/<id>/<ver>/prompt.json 该版本提示词快照
 |---|---|
 | `version` | `YYYYMMDD` |
 | `at` | 该版本定版时间，ISO 8601 带时区 |
+| `title` | 本版标题（如「四线全览」「东线章节深化」），只描述这一版 |
+| `summary` | 本版一句话内容说明，供作品页版本块展示 |
+| `promptSummary` | 本版提示词摘要，供 hover 卡片 / 查看器标题展示 |
+| `duration` | 本版时长，`m:ss`（例 `3:14`） |
 | `effectivePrompt` | 该版本实际用于生成的完整提示词快照 |
 | `promptSeqs` | `[起, 止]`，该版本覆盖的提示词日志 `seq` 范围 |
 | `status` | `final` 等 |
+
+`title` / `summary` / `promptSummary` / `duration` 是**版本级事实**：作品页的版本块、星图 hover 卡片、查看器标题一律读当前所选版本（未指定版本时读 `currentVersion`），不得回退到 `work.json` 的作品级字段。作品级 `prompt` / `promptSummary` 只表达「这件作品整体是什么」，在作品页单独占一行，与版本说明在视觉上分开。
 
 构建命令：`python3 tools/build_index.py`。它会重写 `data/index.json`、`data/index.js`、`data/thumbs.js` 与每个作品的 `work.js`；这些文件一律不手改。`file://` 打开时 Chrome 禁止 fetch 本地 JSON，页面改用 `data/index.js` 与 `work.js` 里的 `window.AI_LAB_INDEX` / `window.AI_LAB_WORK_CACHE`。
 
@@ -226,6 +232,19 @@ works/<capability>/<id>/<ver>/prompt.json 该版本提示词快照
 
 `status: "placeholder"` 或尚未定版的作品可以没有 `versions`，视为「未定版、单稿」，页面直接读顶层字段。首次定版时再补第一条版本。
 
+### 8.6 多版本只走版本目录，不设附加影片
+
+- **`extras` 方案已废弃**：不要在 `work.json` 里写 `extras` 字段，也不要在作品目录下建 `extras/`；同一件作品的后续内容一律作为 `/works/<cap>/<id>/<version>/` 下的一个版本。
+- 理由：版本有 `prompt.json`、时长、缩略图与独立入口，能被索引、能被 hover 卡片与查看器识别；附加影片是第二套结构，会让「这件作品有几版」出现两个答案。
+- 历史遗留：曾短暂存在的 `extras/` 与其日志已并入正式版本目录，撤销记录留在 `backup/ingested-then-revoked/`，不作为规范的一部分。
+
+### 8.7 版本页只介绍本版
+
+- 作品页顶部说明、星图 hover 卡片、查看器标题里的**版本号 / 标题 / 内容说明 / 提示词摘要 / 时长**，全部取自当前所选版本（`prompt.json`），不得混入其它版本的文案。
+- 切换版本时这些文案要整体切换，不允许出现「标题是新版、说明还是旧版」的混搭。
+- 星图 hover 卡片默认显示 `currentVersion`（最新版）的摘要，并标出版本号。
+- 作品级只保留一行「这件作品整体是什么」的简介（`work.json` 的 `promptSummary`），与版本级的一段说明在视觉上明确分开。
+
 ---
 
 ## 9. 需求变更与提示词记录
@@ -250,7 +269,7 @@ works/<capability>/<id>/<ver>/prompt.json 该版本提示词快照
 |---|---|---|
 | `seq` | number | 从 1 递增，不复用 |
 | `at` | string | ISO 8601 带时区，如 `2026-11-06T14:32+08:00` |
-| `kind` | string | `initial`（初始需求）/ `revision`（后续修改） |
+| `kind` | string | `initial`（初始需求）/ `revision`（后续修改）/ `cleanup`（非内容变更的清理与决定，`affects` 为空） |
 | `text` | string | 用户原话，逐字 |
 | `intent` | string | 一句话归纳，仅用于检索，不替代 `text` |
 | `affects` | string \| string[] | `layout` / `color` / `copy` / `duration` / `audio` |
@@ -395,7 +414,8 @@ works/<cap>/<work-id>/<version>/
   01.jpg…        可选 — 图片系列
 ```
 
-- 视频类作品：原始形态是那支网页版影片，收进版本目录作为 `index.html`；`video.mp4` 只是导出物，保留但不作为入口。
+- 视频类作品的原始形态是那支网页版影片，收进版本目录作为 `index.html`；**默认只交付这一份自包含 HTML**（双击可播、零外部请求），不默认生成 mp4。
+- **mp4 属可选产物**：仅在用户明确要求时才生成，`video.mp4` 不作为查看器入口、不参与星图与版本识别。已存在的 mp4 保留不动，后续不再新增；替换版本内容时，如果旧 mp4 对应的是被替换的内容，应删除该文件（内容错了就没有保留价值）。
 - **缩略图与查看器入口解耦**：`thumb.jpg` 只负责"在星图上被识别"，不代表作品能展示什么；作品页负责真正展示。
 
 ### 11.3 占位件

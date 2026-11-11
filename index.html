@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>AI LAB · 星图 / 样张</title>
+<title>AI LAB · 星图</title>
 <link rel="icon" href="data:,">
 <style>
   :root{
@@ -50,19 +50,23 @@
   }
   .s-brand span{display:block;margin-top:10px;font-size:10px;letter-spacing:.28em;color:var(--dim)}
   .s-brand .rule{width:44px;height:1px;background:var(--hair);margin-top:14px}
-  .count{text-align:right;font-size:10px;letter-spacing:.22em;color:var(--dim);
-    line-height:1.9;padding-top:3px}
-  #legend{position:absolute;left:30px;bottom:28px;z-index:6;pointer-events:auto;
-    font-size:10px;letter-spacing:.18em;color:var(--dim);line-height:2.1}
-  #legend .lg{cursor:default;transition:color .18s ease}
-  #legend .lg-h{font-size:8.5px;letter-spacing:.3em;color:rgba(233,228,216,.28);
-    margin-bottom:7px}
+  /* 能力图例：上方居中横排；字号放大到一眼可读，指到枝干时对应项放大提亮 */
+  #legend{position:absolute;left:50%;top:92px;transform:translateX(-50%);z-index:6;
+    display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+    gap:2px 30px;width:max-content;max-width:min(90vw,760px);
+    font-size:15px;letter-spacing:.14em;color:var(--dim);line-height:1.9;
+    text-align:center;pointer-events:auto}
+  #legend .lg{cursor:default;transform-origin:50% 50%;transform:translateZ(0);
+    transition:color .16s ease,transform .16s ease,opacity .16s ease,text-shadow .16s ease}
+  #legend .lg.hot{transform:scale(1.16);color:rgba(240,236,226,.98);
+    text-shadow:0 0 15px rgba(233,228,216,.3)}
+  #legend .lg.dim{opacity:.44}
   #legend .lg:hover,#legend .lg.on{color:rgba(233,228,216,.95)}
   #legend .lg.empty{color:rgba(233,228,216,.24);cursor:default}
   #legend .lg.empty i{opacity:.35}
-  #legend i{display:inline-block;width:12px;height:8px;margin-right:9px;vertical-align:0;
-    border:1px solid rgba(233,228,216,.16);transition:width .2s ease}
-  #legend .lg.on i{width:18px}
+  #legend i{display:inline-block;width:17px;height:11px;margin-right:11px;vertical-align:0;
+    border:1px solid rgba(233,228,216,.18);transition:transform .2s ease}
+  #legend .lg.on i,#legend .lg.hot i{transform:scaleX(1.45)}
   #sFoot{position:absolute;left:0;right:0;bottom:26px;z-index:6;pointer-events:none;
     display:flex;justify-content:center}
   #hint{font-size:10px;letter-spacing:.22em;color:rgba(233,228,216,.34)}
@@ -73,46 +77,126 @@
   #selection.on{display:block}
   #selection a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--hair)}
   #card{position:absolute;left:0;top:0;z-index:9;pointer-events:none;opacity:0;
-    transform:translate(-50%,-100%);
+    transform:translate(-50%,0);
     transition:opacity .22s ease}
-  #card.on{opacity:1}
-  .card-in{width:212px;padding:9px;background:rgba(9,10,15,.93);
+  #card.on{opacity:1;pointer-events:auto}
+  .card-in{width:min(366px,calc(100vw - 24px));padding:10px;
+    background:rgba(9,10,15,.94);
     border:1px solid rgba(233,228,216,.16);
     box-shadow:0 20px 56px rgba(0,0,0,.6);
     transform:translateY(12px);
     transition:transform .26s cubic-bezier(.22,.61,.36,1)}
   #card.on .card-in{transform:translateY(0)}
-  .card-in .shot{height:120px;overflow:hidden;background:#0b0c12}
+  .card-in .shot{height:200px;overflow:hidden;background:#0b0c12}
   .card-in .shot img{width:100%;height:100%;object-fit:cover;display:block;
     filter:saturate(.82) brightness(.96)}
   #card.noimg .shot{display:none}
   .card-in .t{margin-top:9px;font-family:"Didot","Songti SC",serif;
     font-size:14px;line-height:1.35;letter-spacing:.02em}
-  .card-in .m{margin-top:5px;font-size:8.5px;letter-spacing:.2em;color:var(--dim);
+  .card-in .m{margin-top:5px;font-size:9.5px;letter-spacing:.14em;color:rgba(233,228,216,.6);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .card-in .p{margin-top:7px;font-size:9px;line-height:1.62;letter-spacing:.02em;
-    color:rgba(233,228,216,.46);display:-webkit-box;-webkit-line-clamp:2;
+  .card-in .p{margin-top:8px;font-size:13px;line-height:1.72;letter-spacing:.01em;
+    color:rgba(233,228,216,.88);display:-webkit-box;-webkit-line-clamp:3;
     -webkit-box-orient:vertical;overflow:hidden}
-  .card-in .f{margin-top:7px;display:flex;justify-content:space-between;gap:8px;
-    font-size:8px;letter-spacing:.14em;color:rgba(233,228,216,.3);white-space:nowrap}
+  .card-in .f{margin-top:8px;display:flex;justify-content:space-between;gap:8px;
+    font-size:9px;letter-spacing:.14em;color:rgba(233,228,216,.52);white-space:nowrap}
   .card-in .f .k::before{content:"";display:inline-block;width:4px;height:4px;
     border-radius:50%;background:rgba(233,228,216,.26);margin-right:5px;vertical-align:1px}
   .card-in .f .k.live{color:rgba(233,228,216,.64)}
   .card-in .f .k.live::before{background:#7fd7c4}
+  .card-in .go{display:flex;align-items:center;justify-content:center;gap:9px;
+    width:100%;margin-top:10px;padding:10px 12px;cursor:pointer;
+    background:rgba(127,215,196,.12);border:1px solid rgba(127,215,196,.48);
+    color:#e6f6f1;font-family:inherit;font-size:10px;letter-spacing:.26em;
+    transition:background .2s ease,border-color .2s ease}
+  .card-in .go:hover{background:rgba(127,215,196,.22);
+    border-color:rgba(127,215,196,.82)}
+  .card-in .go b{font-weight:400;font-size:9px;opacity:.62;letter-spacing:.1em}
+  .card-in .go[hidden]{display:none}
   #card.noprompt .p{display:none}
-  #intro{position:absolute;inset:0;z-index:20;background:#05060a;
+  #intro{position:absolute;inset:0;z-index:20;overflow:hidden;
     display:flex;align-items:center;justify-content:center;
-    transition:opacity .9s cubic-bezier(.4,0,.2,1)}
+    background:#04060a;transition:opacity .62s ease}
   #intro.done{opacity:0;pointer-events:none}
-  .intro-in{text-align:center}
+  /* 作品图墙：固定格数，四行，整体缓慢向右流动（图从左侧进来）；作品按顺序占位，余下留空 */
+  #iWall{position:absolute;inset:0;z-index:0;display:flex;flex-direction:column;
+    justify-content:center;gap:clamp(8px,1.1vh,14px);overflow:hidden;
+    --ch:clamp(112px, calc((100vh - 44px) / 4), 220px);--cw:calc(var(--ch) * 1.32);
+    opacity:0;transition:opacity .22s linear}
+  #iWall.ready{opacity:1}
+  #iWall .row{position:relative;display:flex;gap:clamp(8px,1.1vh,14px);width:max-content;
+    animation:wallFlow 58s linear infinite}
+  #iWall .row:nth-child(1){margin-left:-1.5%;animation-duration:58s;animation-delay:-2s}
+  #iWall .row:nth-child(2){margin-left:-3%;animation-duration:71s;animation-delay:-1s}
+  #iWall .row:nth-child(3){margin-left:-2%;animation-duration:52s;animation-delay:-2.5s}
+  #iWall .row:nth-child(4){margin-left:-4%;animation-duration:64s;animation-delay:-1.5s}
+  @keyframes wallFlow{from{transform:translate3d(calc(-50% - var(--fgap,0px) / 2),0,0)}
+    to{transform:translate3d(0,0,0)}}
+  #iWall .cell{flex:0 0 auto;width:var(--cw);height:var(--ch);position:relative;
+    border-radius:2px;overflow:hidden;
+    transition:transform .32s cubic-bezier(.2,.7,.2,1),opacity .32s ease}
+  #iWall .cell img{width:100%;height:100%;object-fit:cover;display:block;
+    filter:saturate(.8) brightness(1);opacity:.8;
+    transition:filter .32s ease,opacity .32s ease}
+  /* 空位：极淡斜纹 + 内描边，不做成灰方块，也不写任何字 */
+  #iWall .cell.empty{
+    background:
+      repeating-linear-gradient(135deg, rgba(233,228,216,.022) 0 1px, rgba(233,228,216,0) 1px 10px),
+      linear-gradient(158deg, rgba(233,228,216,.036), rgba(233,228,216,.008) 62%, rgba(233,228,216,.022));
+    box-shadow:inset 0 0 0 1px rgba(233,228,216,.05)}
+  #iWall.focus .cell{opacity:.5}
+  #iWall.focus .cell.pin{opacity:1;z-index:1}
+  #iWall.focus .cell.pin img{filter:none;opacity:1}
+  /* 压暗：中间留出读字区，四周让图墙透出来 */
+  #iWall::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+    transition:opacity .32s ease;
+    background:
+      radial-gradient(42% 38% at 50% 50%, rgba(4,6,9,.94) 0%, rgba(4,6,9,.8) 44%,
+        rgba(4,6,9,.34) 74%, rgba(4,6,9,.05) 100%),
+      linear-gradient(180deg, rgba(4,6,9,.55), rgba(4,6,9,.16) 24%,
+        rgba(4,6,9,.16) 76%, rgba(4,6,9,.6))}
+  #iWall.focus::after{opacity:.62}
+  /* 标题退场后压暗层也退掉，别在中间留一块无来由的暗斑 */
+  #iWall.plain::after{opacity:.34}
+  @media (max-width:560px){
+    #iWall{--ch:clamp(84px, calc((100vh - 40px) / 4), 200px);--cw:calc(var(--ch) * 0.92)}
+  }
+  .intro-in{position:relative;z-index:3;text-align:center;width:min(86vw,520px);
+    pointer-events:none;transition:opacity .34s ease}
+  /* 退场分三段：轻淡 → 更淡 → 消失，1.4s，节奏沉着 */
+  .intro-in.out{animation:introOut 1.4s cubic-bezier(.4,0,.6,1) forwards}
+  @keyframes introOut{0%{opacity:1}28%{opacity:.72}58%{opacity:.34}100%{opacity:0}}
   .intro-in h1{margin:0;font-family:"Didot","Songti SC",serif;font-weight:400;
-    font-size:clamp(30px,4.4vw,54px);letter-spacing:.5em;text-indent:.5em}
-  .intro-in .sub{margin-top:22px;font-size:10px;letter-spacing:.34em;color:var(--dim)}
-  .intro-in .bar{width:160px;height:1px;background:var(--hair);margin:26px auto 0;
-    position:relative;overflow:hidden}
-  .intro-in .bar::after{content:"";position:absolute;left:-40%;top:0;width:40%;height:1px;
-    background:rgba(233,228,216,.75);animation:sweep 1.6s ease-in-out infinite}
-  @keyframes sweep{0%{left:-40%}100%{left:100%}}
+    font-size:clamp(26px,4vw,46px);letter-spacing:.52em;text-indent:.52em;
+    color:rgba(233,228,216,.92);text-shadow:0 0 28px rgba(127,215,196,.16);
+    animation:rise .55s ease-out both}
+  .intro-in .ip{margin-top:26px;animation:rise .55s ease-out .06s both}
+  @keyframes rise{from{opacity:0;transform:translate3d(0,8px,0)}
+    to{opacity:1;transform:translate3d(0,0,0)}}
+  .ip-track{height:2px;background:rgba(233,228,216,.09);overflow:hidden}
+  .ip-track i{display:block;height:100%;width:0;
+    background:linear-gradient(90deg,rgba(127,215,196,.45),rgba(233,228,216,.9));
+    box-shadow:0 0 12px rgba(127,215,196,.45);transition:width .3s linear}
+  /* 加载完毕：等标题退场后再浮现，点击/轻触/回车进入星图 */
+  #ready{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:18px;
+    pointer-events:none;opacity:0;transform:translate3d(0,6px,0);
+    transition:opacity .55s ease,transform .55s ease}
+  #ready.on{opacity:1;transform:none}
+  /* 文字后面垫一层柔和暗场，压在亮图上也能读清；不吃点击 */
+  #ready::before{content:"";position:absolute;left:50%;top:50%;z-index:0;
+    width:min(94vw,620px);height:250px;transform:translate3d(-50%,-50%,0);
+    pointer-events:none;
+    background:radial-gradient(62% 50% at 50% 50%, rgba(3,5,9,.84),
+      rgba(3,5,9,.52) 62%, rgba(3,5,9,0) 100%)}
+  #ready .rd-t,#ready .rd-h{position:relative;z-index:1}
+  #ready .rd-t{font-family:"Didot","Songti SC",serif;font-weight:400;
+    font-size:clamp(20px,2.6vw,30px);letter-spacing:.42em;text-indent:.42em;
+    color:rgba(233,228,216,.94);text-shadow:0 0 26px rgba(127,215,196,.2)}
+  #ready .rd-h{font-size:10.5px;letter-spacing:.3em;text-indent:.3em;
+    color:rgba(233,228,216,.5);animation:hintPulse 2.4s ease-in-out infinite}
+  @keyframes hintPulse{0%,100%{opacity:.5}50%{opacity:.92}}
+  #intro.armed{cursor:pointer}
 
   /* ——— 能力页（#/<cap>）——— */
   #capPanel{position:absolute;right:30px;top:96px;z-index:6;width:252px;display:none;
@@ -123,7 +207,7 @@
   #capPanel .cp-h{font-size:8.5px;letter-spacing:.3em;color:rgba(233,228,216,.34);
     padding-bottom:9px;border-bottom:1px solid var(--hair)}
   #capPanel .cp-h b{font-family:"Didot","Songti SC",serif;font-size:15px;font-weight:400;
-    letter-spacing:.12em;color:var(--ink);display:block;margin-top:6px}
+    letter-spacing:.12em;color:var(--ink);display:block}
   #capPanel .cp-list{margin-top:4px;max-height:54vh;overflow:auto;scrollbar-width:thin}
   #capPanel .cp-list a{display:block;padding:8px 0;border-bottom:1px solid rgba(233,228,216,.07);
     color:rgba(233,228,216,.72);text-decoration:none;font-size:11px;line-height:1.45;
@@ -180,6 +264,20 @@
     display:flex;flex-wrap:wrap;gap:0 14px}
   .dmeta .dsub em{font-style:normal;color:rgba(233,228,216,.78)}
   .dmeta .dsub i{display:inline-block;width:14px;height:1px;margin-right:7px;vertical-align:3px}
+  /* 作品级一行简介 vs 版本级一段说明：层级与颜色明确区分 */
+  .dmeta .dwork{margin-top:9px;max-width:560px;font-size:12px;letter-spacing:.03em;
+    color:rgba(233,228,216,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dmeta .dwork b{font-weight:400;letter-spacing:.22em;color:rgba(233,228,216,.56);
+    margin-right:9px}
+  .dmeta .dver{margin-top:12px;max-width:560px}
+  .dmeta .dver .vh{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .dmeta .dver .vh b{font-weight:400;font-size:10px;letter-spacing:.2em;
+    color:rgba(127,215,196,.92)}
+  .dmeta .dver .vh span{font-size:12px;letter-spacing:.08em;color:rgba(233,228,216,.9)}
+  .dmeta .dver .vh i{font-style:normal;font-size:10.5px;letter-spacing:.12em;
+    color:rgba(233,228,216,.6)}
+  .dmeta .dver p{margin:6px 0 0;font-size:13px;line-height:1.75;letter-spacing:.02em;
+    color:rgba(233,228,216,.86)}
   #drail{position:absolute;right:30px;bottom:28px;z-index:6;display:flex;
     align-items:center;gap:14px}
   #drail .nav{width:30px;height:30px;border:1px solid var(--hair);background:transparent;
@@ -237,18 +335,19 @@
   .vw-msg a:hover,.vw-msg button:hover{border-color:rgba(233,228,216,.7)}
 
   /* 作品页：打开查看器的入口 */
-  #dact{display:none;margin-top:18px;pointer-events:auto}
-  #dopen{display:inline-flex;align-items:center;gap:10px;background:rgba(5,6,10,.5);
+  #dact{display:none;margin-top:20px;pointer-events:auto}
+  #dopen{display:inline-flex;align-items:center;gap:12px;
+    background:rgba(127,215,196,.13);
     -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
-    border:1px solid rgba(233,228,216,.34);color:var(--ink);cursor:pointer;
-    font-size:10px;letter-spacing:.26em;padding:11px 20px;
+    border:1px solid rgba(127,215,196,.52);color:#e6f6f1;cursor:pointer;
+    font-family:inherit;font-size:11px;letter-spacing:.26em;padding:13px 26px;
     transition:background .2s ease,border-color .2s ease}
-  #dopen:hover{background:rgba(233,228,216,.1);border-color:rgba(233,228,216,.72)}
+  #dopen:hover{background:rgba(127,215,196,.23);border-color:rgba(127,215,196,.88)}
   #dopen i{font-style:normal;font-size:9px;opacity:.7;letter-spacing:.1em}
   .dsub .noent{color:rgba(233,228,216,.42)}
 
   /* 版本 / 提示词侧栏 */
-  #dside{position:absolute;right:26px;top:96px;bottom:86px;width:312px;z-index:7;
+  #dside{position:absolute;right:26px;top:96px;bottom:86px;width:344px;z-index:7;
     overflow:auto;pointer-events:auto;padding:16px 16px 18px;
     background:rgba(5,6,10,.84);
     -webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
@@ -268,20 +367,20 @@
   .verchip:hover{color:var(--ink)}
   .verchip.on{color:#05060a;background:rgba(233,228,216,.9);border-color:rgba(233,228,216,.9)}
   .verchip b{font-weight:400;margin-left:6px;font-size:8px;letter-spacing:.12em;opacity:.62}
-  #dside .at{margin-top:10px;font-size:9px;letter-spacing:.14em;color:rgba(233,228,216,.36)}
-  #dside .pfull{margin-top:12px;font-size:9.5px;line-height:1.85;letter-spacing:.02em;
-    color:rgba(233,228,216,.62);white-space:pre-wrap;word-break:break-word}
-  #dside .pfull em{font-style:normal;color:rgba(233,228,216,.3);display:block;
-    font-size:8px;letter-spacing:.24em;margin-bottom:5px}
+  #dside .at{margin-top:10px;font-size:10px;letter-spacing:.14em;color:rgba(233,228,216,.55)}
+  #dside .pfull{margin-top:12px;font-size:13.5px;line-height:1.82;letter-spacing:.01em;
+    color:rgba(233,228,216,.9);white-space:pre-wrap;word-break:break-word}
+  #dside .pfull em{font-style:normal;color:rgba(233,228,216,.5);display:block;
+    font-size:9.5px;letter-spacing:.24em;margin-bottom:6px}
   #dside .logh{margin-top:20px;padding-top:10px;border-top:1px solid var(--hair);
-    font-size:8.5px;letter-spacing:.3em;color:rgba(233,228,216,.3)}
+    font-size:10px;letter-spacing:.3em;color:rgba(233,228,216,.55)}
   .plog{margin-top:10px}
   .plog .e{padding:8px 0 10px;border-bottom:1px solid rgba(233,228,216,.07)}
-  .plog .e .h{display:flex;gap:8px;align-items:baseline;font-size:8px;
-    letter-spacing:.14em;color:rgba(233,228,216,.34)}
-  .plog .e .h b{font-weight:400;color:rgba(233,228,216,.7)}
-  .plog .e .x{margin-top:5px;font-size:9px;line-height:1.7;color:rgba(233,228,216,.64)}
-  .plog .e .n{margin-top:4px;font-size:8.5px;line-height:1.6;color:rgba(233,228,216,.32)}
+  .plog .e .h{display:flex;gap:8px;align-items:baseline;font-size:9.5px;
+    letter-spacing:.14em;color:rgba(233,228,216,.52)}
+  .plog .e .h b{font-weight:400;color:rgba(233,228,216,.82)}
+  .plog .e .x{margin-top:6px;font-size:13px;line-height:1.76;color:rgba(233,228,216,.88)}
+  .plog .e .n{margin-top:5px;font-size:11.5px;line-height:1.65;color:rgba(233,228,216,.56)}
   .plog .e.sup .x,.plog .e.rej .x{opacity:.34;text-decoration:line-through}
   .plog .e.rej .h b{color:rgba(208,112,88,.8)}
   .plog .e .s{margin-left:auto;white-space:nowrap;opacity:.8}
@@ -299,11 +398,12 @@
   @media (max-width:640px){
     #sHead{padding:20px 18px}
     .s-brand b{font-size:16px;letter-spacing:.34em}
-    #legend{left:18px;bottom:64px;line-height:2.4}
+    #legend{top:86px;width:calc(100vw - 32px);max-width:calc(100vw - 32px);
+      gap:2px 18px;font-size:14px;line-height:1.85}
     #sFoot{bottom:20px}
     #hint{font-size:9px;letter-spacing:.14em}
-    #card .card-in{width:176px}
-    .card-in .shot{height:100px}
+    #card .card-in{width:min(300px,calc(100vw - 20px))}
+    .card-in .shot{height:150px}
     #selection{left:18px;margin-top:18px;max-width:180px}
     #capPanel{left:18px;right:18px;top:auto;bottom:96px;width:auto}
     #dside{display:none;left:16px;right:16px;top:96px;bottom:auto;max-height:62vh;
@@ -315,6 +415,9 @@
     .dmeta{left:16px;bottom:96px;max-width:calc(100% - 32px)}
     .dmeta h1{font-size:20px}
     .dmeta .dsub{font-size:9px;gap:0 10px}
+    .dmeta .dwork{max-width:100%;font-size:11.5px}
+    .dmeta .dver p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+      overflow:hidden;font-size:12.5px;line-height:1.7}
     #drail{right:16px;bottom:18px}
     #drail .nav{width:28px;height:28px}
     .dfoot{display:none}
@@ -322,11 +425,19 @@
   }
   @media (prefers-reduced-motion: reduce){
     .screen{transition:none}
-    #intro{transition:none}
-    .intro-in .bar::after{animation:none;left:0;width:100%;opacity:.5}
+    #intro{transition:opacity .18s linear}
+    #iWall{opacity:1;transition:none}
+    #iWall .row{animation:none}
+    .intro-in h1,.intro-in .ip{animation:none}
+    .intro-in{animation:introFade .55s ease-out both;transition:none}
+    .intro-in.out{animation:none;opacity:0}
+    #ready{transition:none}
+    #ready .rd-h{animation:none;opacity:.5}
+    .ip-track i{transition:none}
     #card, #card .card-in{transition:none}
     #dview .dlayer,#dvid{transition:none}
   }
+  @keyframes introFade{from{opacity:0}to{opacity:1}}
 </style>
 </head>
 <body>
@@ -341,7 +452,6 @@
       <span>星图 / STAR MAP</span>
       <div class="rule"></div>
     </div>
-    <div class="count" id="count"></div>
   </header>
 
   <div id="legend"></div>
@@ -353,15 +463,22 @@
     <div class="m"></div>
     <div class="p"></div>
     <div class="f"><span class="d"></span><span class="k"></span><span class="v"></span></div>
+    <button class="go" type="button" hidden>▶&nbsp;&nbsp;播放<b>PLAY</b></button>
   </div></div>
 
   <footer id="sFoot"><div id="hint"><b>拖拽</b> 旋转 &nbsp;·&nbsp; <b>滚轮</b> 缩放 &nbsp;·&nbsp; <b>点击</b> 进入</div></footer>
 
-  <div id="intro">
+  <div id="intro" aria-hidden="true">
+    <div id="iWall"></div>
     <div class="intro-in">
       <h1>AI LAB</h1>
-      <div class="sub">星 图 &nbsp;·&nbsp; 样 张 &nbsp;·&nbsp; 2026</div>
-      <div class="bar"></div>
+      <div class="ip">
+        <div class="ip-track"><i id="ipBar"></i></div>
+      </div>
+    </div>
+    <div id="ready">
+      <div class="rd-t">加载完毕</div>
+      <div class="rd-h">点击或轻触进入</div>
     </div>
   </div>
 </div>
@@ -389,6 +506,11 @@
     <div class="didx" id="didx"></div>
     <h1 id="dtitle">—</h1>
     <div class="dsub" id="dsub"></div>
+    <div class="dwork" id="dwork"></div>
+    <div class="dver" id="dver">
+      <div class="vh"><b id="dverNo">—</b><span id="dverTitle"></span><i id="dverDur"></i></div>
+      <p id="dverSum"></p>
+    </div>
     <div id="dact"><button id="dopen">▶&nbsp;&nbsp;打开作品<i>OPEN</i></button></div>
   </div>
 
@@ -437,9 +559,191 @@
 
 <div id="fatal" class="fatal"></div>
 
-<script src="vendor/three.min.js"></script>
-<script src="vendor/3d-force-graph.min.js"></script>
+<script>
+  // 开场装载的真实里程碑：库 → 索引 → 星图 → 就绪。
+  // 进度条只读这四个标记，不按时间编造进度。
+  window.__labMarks = { lib:0, data:0, graph:0, ready:0 };
+  window.__labMark = function(k){
+    if (!k || !(k in window.__labMarks) || window.__labMarks[k]) return;
+    window.__labMarks[k] = 1;
+  };
+  // 依赖脚本缺失时给出明确提示，而不是留一张白页
+  window.__labAssetFail = function(f){
+    window.__labAssetMiss = window.__labAssetMiss || [];
+    if (window.__labAssetMiss.indexOf(f) < 0) window.__labAssetMiss.push(f);
+    var d = document.getElementById("fatal");
+    if (!d) return;
+    d.textContent = "星图无法启动：缺少 vendor/" + window.__labAssetMiss.join("、vendor/") + "。\n" +
+      "请确认打开的是完整的 ai-lab 目录，不要只拷贝 index.html。";
+    d.classList.add("on");
+    if (window.__labLoaderStop) window.__labLoaderStop();
+    else {
+      var i = document.getElementById("intro");
+      if (i) i.classList.add("done");
+    }
+  };
+</script>
 <script src="data/thumbs.js"></script>
+<script>
+/* ===== 开场：作品图墙 =====
+   放在 vendor 之前：thumb 是 data URI，脚本一到就能铺满并响应悬停，
+   不必等 three / 3d-force-graph 下完。
+   格子总数固定（四行 × 按视口宽算出的列数，1440 下 7×4 = 28 格）。
+   作品缩略图按数据顺序依次占格，其余留空；以后新增作品自动落进下一个空位。 */
+(function(){
+  var wall = document.getElementById("iWall");
+  if (!wall) return;
+  var THUMBS = window.AI_LAB_THUMBS || {};
+  var REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var ROWS = 4, rows = [], pinned = null, titleT = 0;
+
+  function workKeys(){
+    var out = [];
+    for (var k in THUMBS){
+      if (!THUMBS.hasOwnProperty(k)) continue;
+      if (k.indexOf("@") >= 0) continue;   // 只要作品级封面，不用版本图
+      out.push(k);
+    }
+    return out;
+  }
+
+  function clearPin(){
+    if (!pinned) return;
+    var all = wall.querySelectorAll(".cell");
+    for (var i = 0; i < all.length; i++) all[i].style.transform = "";
+    pinned.classList.remove("pin");
+    pinned = null;
+    wall.classList.remove("focus");
+    for (var r = 0; r < rows.length; r++) rows[r].style.animationPlayState = "";
+  }
+
+  function setPin(cell){
+    if (cell === pinned) return;
+    clearPin();
+    if (!cell) return;
+    pinned = cell;
+    wall.classList.add("focus");
+    cell.classList.add("pin");
+    for (var r = 0; r < rows.length; r++) rows[r].style.animationPlayState = "paused";
+
+    // 先量完再改 transform，否则相邻格读到的是已经让开的位置
+    var b = cell.getBoundingClientRect();
+    var cx = b.left + b.width / 2, cy = b.top + b.height / 2;
+    var RX = b.width * 2.1, RY = b.height * 2.2;
+    var push = b.width * 0.34;
+    var all = wall.querySelectorAll(".cell");
+    var plan = [];
+    for (var i = 0; i < all.length; i++){
+      var c = all[i];
+      if (c === cell) continue;
+      var q = c.getBoundingClientRect();
+      var dx = (q.left + q.width / 2) - cx;
+      var dy = (q.top + q.height / 2) - cy;
+      var f = (1 - Math.min(1, Math.abs(dx) / RX)) * (1 - Math.min(1, Math.abs(dy) / RY));
+      if (f <= 0.02) continue;
+      plan.push([c, (dx >= 0 ? 1 : -1) * push * f, (dy >= 0 ? 1 : -1) * 26 * f, f]);
+    }
+    for (var j = 0; j < plan.length; j++){
+      var p = plan[j];
+      p[0].style.transform = "translate3d(" + p[1].toFixed(1) + "px," +
+        p[2].toFixed(1) + "px,0) scale(" + (1 - 0.2 * p[3]).toFixed(3) + ")";
+    }
+    cell.style.transform = "scale(1.36)";
+  }
+
+  // 图一到位就亮出来，随后让「AI LAB」慢慢退场，别一直压在图上
+  var titleAt = 0;
+  function reveal(){
+    wall.classList.add("ready");
+    var delay = REDUCED ? 260 : 200;
+    titleAt = performance.now() + delay + (REDUCED ? 260 : 1400);
+    titleT = setTimeout(function(){
+      var t = document.querySelector(".intro-in");
+      if (t) t.classList.add("out");
+      wall.classList.add("plain");
+    }, delay);
+  }
+
+  // 探针：量出格宽高与间距（CSS 用的是 clamp，读计算值才准）
+  var probe = document.createElement("div");
+  probe.className = "row";
+  var pc = document.createElement("div");
+  pc.className = "cell";
+  probe.appendChild(pc);
+  wall.appendChild(probe);
+  var cw = pc.offsetWidth || 160;
+  var gap = parseFloat(getComputedStyle(probe).columnGap) || 10;
+  wall.removeChild(probe);
+
+  var list = workKeys();
+  // 列数 = 铺满当前视口所需，且至少能装下已有作品（新增作品自动扩格，不用改代码）
+  var perRow = Math.max(3,
+    Math.ceil((window.innerWidth + gap) / (cw + gap)) + 1,
+    Math.ceil(list.length / ROWS));
+
+  for (var r = 0; r < ROWS; r++){
+    var row = document.createElement("div");
+    row.className = "row";
+    for (var c = 0; c < perRow; c++){
+      var cell = document.createElement("div");
+      cell.className = "cell empty";
+      row.appendChild(cell);
+    }
+    wall.appendChild(row);
+    rows.push(row);
+  }
+
+  // 作品依次占位：一行一件、逐行轮流；列按视口能看到的宽度错开（宽屏错得开，窄屏收到同一列）
+  var span = Math.max(2, window.innerWidth / (cw + gap));
+  var step = Math.max(0, Math.round((span - 2) / 3));
+  for (var i = 0; i < list.length; i++){
+    var rr = i % ROWS;
+    // 宽屏按可见列数错开；窄屏只够两列时交替落位，避免所有图叠在同一竖列
+    var cc = step
+      ? (1 + rr * step + Math.floor(i / ROWS)) % perRow
+      : (rr % 2 + Math.floor(i / ROWS)) % perRow;
+    var slot = rows[rr] && rows[rr].children[cc];
+    if (!slot) continue;
+    slot.className = "cell";
+    var img = document.createElement("img");
+    img.alt = "";
+    img.draggable = false;
+    img.decoding = "async";
+    img.src = THUMBS[list[i]];
+    slot.appendChild(img);
+  }
+
+  if (!REDUCED){
+    // 复制一份，位移正好半行宽 → 首尾相接，无跳变
+    for (var r2 = 0; r2 < ROWS; r2++){
+      var kids = Array.prototype.slice.call(rows[r2].children);
+      for (var k2 = 0; k2 < kids.length; k2++) rows[r2].appendChild(kids[k2].cloneNode(true));
+    }
+    wall.style.setProperty("--fgap", gap + "px");
+    wall.addEventListener("pointermove", function(e){
+      var t = e.target;
+      var cell = t && t.closest ? t.closest(".cell") : null;
+      if (cell && cell.classList.contains("empty")) cell = null;
+      setPin(cell);
+    });
+    wall.addEventListener("pointerleave", function(){ setPin(null); });
+  }
+
+  // 建完立刻亮：不等 rAF（后面还有会阻塞解析的 vendor 脚本，rAF 可能被压到很久之后），
+  // 也不等图片解码回调——data URI 解码极快，宁可先见格再看清画
+  reveal();
+
+  window.__labWallTitleAt = function(){ return titleAt; };
+  window.__labWallStop = function(){
+    if (titleT) clearTimeout(titleT);
+    clearPin();
+    wall.innerHTML = "";
+    rows = [];
+  };
+})();
+</script>
+<script src="vendor/three.min.js" onload="__labMark('lib')" onerror="__labAssetFail('three.min.js')"></script>
+<script src="vendor/3d-force-graph.min.js" onload="__labMark('lib')" onerror="__labAssetFail('3d-force-graph.min.js')"></script>
 <script>/*__PROMPTS__*/</script>
 <script>/*__IMAGESVER__*/</script>
 <script>
@@ -461,6 +765,129 @@
   var IMAGESV = window.AI_LAB_IMAGES_VER || {};
   var PROMPTS = window.AI_LAB_PROMPTS || {};
 
+
+  /* ===================== 开场装载层 ===================== */
+  // 进度只来自真实里程碑（库 / 索引 / 星图 / 就绪），条宽 = 已完成里程碑的权重和。
+  // 唯一的"人为"成分是给每条里程碑 300ms 的可读停留：它只会比真实状态慢，
+  // 绝不会跑到真实状态前面，也不会在资源没到齐时先到 100%。
+  window.__labMark("lib");   // vendor 脚本是同步加载的，执行到这里库已就位
+  var Loader = (function(){
+    var el = document.getElementById("intro");
+    var bar = document.getElementById("ipBar");
+    var readyEl = document.getElementById("ready");
+    var ended = false, armed = false;
+
+    function disarm(){
+      if (!armed) return;
+      armed = false;
+      if (el){
+        el.classList.remove("armed");
+        el.removeEventListener("pointerdown", onAct);
+      }
+      window.removeEventListener("keydown", onKey);
+    }
+
+    function onAct(e){
+      if (e && e.type === "pointerdown" && e.button) return;   // 只认左键/触摸
+      end();
+    }
+    function onKey(e){
+      if (e.key === "Enter" || e.key === " " || e.key === "Spacebar"){
+        e.preventDefault();
+        end();
+      }
+    }
+
+    // 点击/回车之后才真正进星图
+    function end(){
+      if (ended) return;
+      ended = true;
+      disarm();
+      if (!el) return;
+      el.classList.add("done");
+      el.setAttribute("aria-hidden", "true");
+      // 淡出后移出渲染树并停掉图墙，别留在后台继续跑动画
+      setTimeout(function(){
+        if (readyEl) readyEl.classList.remove("on");
+        if (el && el.parentNode) el.style.display = "none";
+        if (window.__labWallStop) window.__labWallStop();
+      }, REDUCED ? 0 : 700);
+    }
+
+    // 进度到 100% 不自动进星图：等「AI LAB」退干净 → 浮出「加载完毕」→ 等一次点击
+    function finish(){
+      if (ended) return;
+      var at = window.__labWallTitleAt ? window.__labWallTitleAt() : 0;
+      var wait = (at ? Math.max(0, at - performance.now()) : 0) + (REDUCED ? 0 : 120);
+      setTimeout(function(){
+        if (ended) return;
+        if (readyEl) readyEl.classList.add("on");
+        armed = true;
+        if (el){
+          el.classList.add("armed");
+          el.setAttribute("aria-hidden", "false");
+          el.addEventListener("pointerdown", onAct);
+        }
+        window.addEventListener("keydown", onKey);
+      }, wait);
+    }
+    if (!el || (window.__labAssetMiss && window.__labAssetMiss.length)){
+      end();
+      return { stop: end };
+    }
+
+    var KEYS = ["lib", "data", "graph", "ready"];
+    var W = { lib:.2, data:.24, graph:.34, ready:.22 };
+    var marks = window.__labMarks;
+    var DWELL = REDUCED ? 0 : 240;    // 每条里程碑的最短可读停留
+    var MIN   = REDUCED ? 0 : 1000;   // 开场最短总时长（配 620ms 淡出约 1.6–2.2s）
+    var HOLD  = REDUCED ? 0 : 180;    // 100% 后留一口气再淡出
+
+    var t0 = performance.now();
+    var lastT = t0;
+    var idx = -1;          // 已展示到第几条里程碑
+    var lastAdv = t0;
+    var shown = 0;
+    var endAt = 0;
+    var raf = 0;
+
+    function paint(){
+      if (bar) bar.style.width = Math.round(shown * 100) + "%";
+    }
+
+    function tick(t){
+      if (ended) return;
+      // 收敛用时间常数而不是帧数：低帧率机器上也能在 ~250ms 内追上真实进度
+      var dts = Math.min(200, t - lastT);
+      lastT = t;
+      var next = idx + 1;
+      if (next < KEYS.length && marks[KEYS[next]] && t - lastAdv >= DWELL){
+        idx = next;
+        lastAdv = t;
+      }
+      var goal = 0;
+      for (var i = 0; i <= idx; i++) goal += W[KEYS[i]];
+      shown += (goal - shown) * (REDUCED ? 1 : (1 - Math.exp(-dts / 85)));
+      if (goal - shown < 0.002) shown = goal;
+      paint();
+
+      if (idx >= KEYS.length - 1 && shown > 0.995 && !endAt && t - t0 >= MIN) endAt = t + HOLD;
+      if (endAt && t >= endAt){ finish(); return; }
+      raf = requestAnimationFrame(tick);
+    }
+    paint();
+    raf = requestAnimationFrame(tick);
+
+    return {
+      stop: function(){
+        if (raf) cancelAnimationFrame(raf);
+        raf = 0;
+        end();
+      }
+    };
+  })();
+  window.__labLoaderStop = Loader.stop;
+
   /* ===================== 星图 ===================== */
   var Star = (function(){
     var el = document.getElementById("star");
@@ -470,6 +897,35 @@
     var cardTitle = card.querySelector(".t");
     var cardMeta = card.querySelector(".m");
     var cardNode = null;
+    var cardGo = card.querySelector(".go");
+    var cardAction = null;   // 悬停卡片上播放按钮要打开的作品与版本
+    var cardHold = false;    // 指针是否停在卡片上（此时不要因离开节点而收起）
+    var cardHideTimer = null;
+    function scheduleCardHide(){
+      if (cardHideTimer) clearTimeout(cardHideTimer);
+      cardHideTimer = setTimeout(function(){
+        cardHideTimer = null;
+        if (!cardHold && !hoverId) hideCard();
+      }, 380);
+    }
+    cardGo.addEventListener("click", function(ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (!cardAction) return;
+      var a = cardAction;
+      hoverId = null;
+      updateSprites();
+      hideCard();
+      Viewer.open(a.work, a.ver);
+    });
+    card.addEventListener("mouseenter", function(){
+      cardHold = true;
+      if (cardHideTimer){ clearTimeout(cardHideTimer); cardHideTimer = null; }
+    });
+    card.addEventListener("mouseleave", function(){
+      cardHold = false;
+      if (!hoverId) scheduleCardHide();
+    });
     var intro = document.getElementById("intro");
     var fatal = document.getElementById("fatal");
     var selection = document.getElementById("selection");
@@ -494,11 +950,18 @@
     var pendingFocus = null;
     var glowTex = {};
     var post = null;
+    // 主干拾取：枝条是自绘的着色器管线，不在 3d-force-graph 的拾取集合里，
+    // 所以每条主干额外挂一根同形的隐形管做命中检测（见 buildBranches）
+    var trunkPicks = [];
+    var pickRay = new THREE.Raycaster();
+    var ptr = {has:false, x:0, y:0, cx:0, cy:0};
+    var trunkHot = null;     // 当前指到的主干（联动图例高亮）
 
     function fatalMsg(text){
       fatal.textContent = text;
       fatal.classList.add("on");
-      intro.classList.add("done");
+      if (window.__labLoaderStop) window.__labLoaderStop();
+      else intro.classList.add("done");
     }
 
     function typeDash(type){
@@ -515,8 +978,7 @@
       var order = ["image","video","web","ppt","game"];
       var legend = document.getElementById("legend");
       // 五个能力条目始终保留；没有作品的能力灰掉并写「暂无作品」，不画枝
-      legend.innerHTML = '<div class="lg-h">能力 / CAPABILITY</div>' +
-        order.map(function(t){
+      legend.innerHTML = order.map(function(t){
           var n = counts[t] || 0;
           return '<div class="lg' + (n ? "" : " empty") + '" data-type="' + t + '">' +
                  typeDash(t) + TYPE_NAMES[t] +
@@ -648,24 +1110,44 @@
 
     // —— 三级视觉：能力主干 -> 作品短枝 -> 版本叶片 ——
     var BRANCH_ORDER = ["image", "video", "web", "ppt", "game"];
-    var BRANCH_ANGLE = { image:-108, video:-52, web:4, ppt:58, game:116 };
+    // 主干角度不写死：按"真有作品的主干数"均分整圈，再叠 ±4° 哈希抖动。
+    // 空能力不画枝，也就不占角度；数量一变（新增/清空某类作品）自动重算。
+    var TRUNK_ANGLE = {};    // 度
+    var TRUNK_BEND = {};     // 沿线弯折量（度），相邻主干反向弯开
+    var TRUNK_BOW = {};      // 中段竖向弓起
+    var TRUNK_SECTOR = 360;  // 每根主干分到的角扇区（度）
     // 主干不是等长射线：每根的长度、弯折、竖向弓起都不同，靠近看才像长出来的
-    var BRANCH_BEND  = { image:-30, video:24, web:-22, ppt:27, game:-25 };
-    var BRANCH_BOW   = { image:42, video:-52, web:34, ppt:-40, game:46 };
     var BRANCH_R0 = 26;
     var BRANCH_LEN = { image:318, video:354, web:302, ppt:336, game:296 };
     // 作品多时主干自动加长，给短枝留出间距（16 件时约等于基准值）
     var BRANCH_GROW = 44;
     var BRANCH_EXTRA = { image:0, video:0, web:0, ppt:0, game:0 };
 
+    // 按"有作品的能力"重算主干角度：整圈等分 + ±4° 抖动，弯折/弓起按序交替
+    function seedTrunkAngles(byType){
+      var active = BRANCH_ORDER.filter(function(t){
+        return (byType[t] || []).length > 0;
+      });
+      var n = active.length || 1;
+      TRUNK_SECTOR = 360 / n;
+      active.forEach(function(t, i){
+        var jit = (hashJitter(t, "trunk") - 0.5) * 8;   // ±4°
+        TRUNK_ANGLE[t] = -90 + i * TRUNK_SECTOR + jit;
+        // 弯折统一同向（风车式缓弧）：每根都转同样角度，梢部仍然严格保持等分间距；
+        // 若反向交替，梢部方向会被各拉 ±24°，画面上反而显得疏密不匀
+        TRUNK_BEND[t] = 12;
+        TRUNK_BOW[t] = (i % 2 ? -1 : 1) * 45;
+      });
+    }
+
     // 主干参数曲线：t=0 根部，t=1 梢部；弯折量随 t 增大，中段再加一点竖向弓
     function branchAt(t, bi){
       var cap = BRANCH_ORDER[bi];
       var len = BRANCH_LEN[cap] + (BRANCH_EXTRA[cap] || 0);
-      var a = BRANCH_ANGLE[cap] * Math.PI / 180 +
-              BRANCH_BEND[cap] * Math.PI / 180 * Math.pow(t, 1.35);
+      var a = TRUNK_ANGLE[cap] * Math.PI / 180 +
+              TRUNK_BEND[cap] * Math.PI / 180 * Math.pow(t, 1.35);
       var r = BRANCH_R0 + t * len;
-      var bow = BRANCH_BOW[cap] * Math.sin(t * Math.PI) * 0.5;
+      var bow = TRUNK_BOW[cap] * Math.sin(t * Math.PI) * 0.5;
       return { a:a, r:r,
                x:Math.cos(a) * r,
                y:Math.sin(a) * r * 0.86 + bow,
@@ -679,14 +1161,6 @@
     function vsub(a, b){ return { x:a.x-b.x, y:a.y-b.y, z:a.z-b.z }; }
     function vcross(a, b){
       return { x:a.y*b.z - a.z*b.y, y:a.z*b.x - a.x*b.z, z:a.x*b.y - a.y*b.x };
-    }
-    // 绕切线把法向旋开一点：短枝的"分叉角"按作品 id 做确定性抖动，避免等角放射
-    function jitterNormal(n, tangent, deg){
-      var axis = vnorm(vcross(tangent, n));
-      var r = deg * Math.PI / 180, cs = Math.cos(r), sn = Math.sin(r);
-      return vnorm({ x:n.x*cs + axis.x*sn,
-                     y:n.y*cs + axis.y*sn,
-                     z:n.z*cs + axis.z*sn });
     }
     function byStamp(a, b){
       var ka = String(a.createdAt || a.date || "");
@@ -741,6 +1215,9 @@
       nodes.push({ id:"__root", kind:"root", title:"AI LAB", type:null,
                    x:0, y:0, z:0, fx:0, fy:0, fz:0, __born:T0 });
 
+      // 角度先按"有作品的能力数"均分整圈（空能力不占位），再逐枝排短枝
+      seedTrunkAngles(byType);
+
       BRANCH_ORDER.forEach(function(t, bi){
         // 沿主干按生成时间升序：老的靠中心，新的靠外
         var list = (byType[t] || []).slice().sort(byStamp);
@@ -778,12 +1255,18 @@
           // 切线用前后差分求，避免 tt=1 时前后点相同导致切线退化为零向量
           var tan = vnorm(vsub(branchAt(Math.min(1, tt + 0.02), bi),
                                branchAt(Math.max(0, tt - 0.02), bi)));
-          var nrm = normalAt(sp.a);
-          var side = 1;                                // 同侧抽枝，像蕨叶的梳齿，减少互相穿插
           var len = twigLen(w) + (hashJitter(w.id, "tw") - 0.5) * twigLen(w) * 0.22;
-          // 分叉角抖动 ±14°：绕主干切线旋转，同一个 id 每次结果一致
-          var jit = (hashJitter(w.id, "ang") - 0.5) * 28;
-          var n = jitterNormal({ x:nrm.x*side, y:nrm.y*side, z:nrm.z*side }, tan, jit);
+          // 短枝方向：在这条主干分到的扇区里按作品数等分，再叠 ±14° 哈希抖动。
+          // 同一条主干上的 N 根短枝因此绕主干散开，而不是全挤在同一侧。
+          var step = N > 1 ? (TRUNK_SECTOR * 0.58) / (N - 1) : 0;
+          var phi = (TRUNK_ANGLE[t] + TRUNK_SECTOR * 0.19 + (i - (N - 1) / 2) * step
+                     + (hashJitter(w.id, "ang") - 0.5) * 28) * Math.PI / 180;
+          var dir = { x:Math.cos(phi), y:Math.sin(phi) * 0.86, z:Math.sin(phi) * 0.34 };
+          // 去掉沿主干的分量，只留背离主干的横向；几乎与主干平行时退回主干法向
+          var dot = dir.x*tan.x + dir.y*tan.y + dir.z*tan.z;
+          var n = { x:dir.x - tan.x*dot, y:dir.y - tan.y*dot, z:dir.z - tan.z*dot };
+          var nl = Math.sqrt(n.x*n.x + n.y*n.y + n.z*n.z);
+          n = nl > 0.08 ? { x:n.x/nl, y:n.y/nl, z:n.z/nl } : normalAt(sp.a);
           var curve = twigCurve(sp, tan, n, len);
           var anchor = bez(curve.p0, curve.c1, curve.c2, curve.p3, 0.30);
 
@@ -791,7 +1274,7 @@
           w.kind = "work";
           w.x = anchor.x; w.y = anchor.y; w.z = anchor.z;
           w.fx = w.x; w.fy = w.y; w.fz = w.z;
-          w.__cap = bi; w.__side = side; w.__twig = len;
+          w.__cap = bi; w.__twig = len; w.__phi = phi * 180 / Math.PI;
           w.__norm = n; w.__curve = curve; w.__tan = tan;
           w.__born = T0 + born + 120 + i * 90;
           nodes.push(w);
@@ -897,6 +1380,15 @@
         // 主干：粗、亮、色饱和，末端才慢慢收进星尘
         addTube(line, 3.00, 1.40, col, 1.00, 0.80, 1.05, 3);
         addTube(line, 7.40, 4.00, col, 0.055, 0.70, 1.05, 1);
+        // 命中检测：着色器管线不参与 3d-force-graph 的拾取，另挂一根同形隐形管，
+        // 半径放大到 15 个世界单位，枝子附近都算命中；只被本地 pickRay 使用
+        var pickPath = curve.getPoints(32);
+        var pickMesh = new THREE.Mesh(new THREE.TubeGeometry(
+          new THREE.CatmullRomCurve3(pickPath), 32, 15, 6, false),
+          new THREE.MeshBasicMaterial({ transparent:true, opacity:0, depthWrite:false }));
+        pickMesh.frustumCulled = false;
+        branchGroup.add(pickMesh);
+        trunkPicks.push({ cap:cap, mesh:pickMesh, pts:pickPath });
       });
 
       // 短枝：沿贝塞尔采样，根部粗实、梢部细淡，60% 之后开始明显淡出
@@ -910,6 +1402,18 @@
           .lerp(new THREE.Color("#cfc9bd"), 0.42);
         var solid = addTube(pts, 1.55, 0.08, tint, 0.54, 0.28, 1.00, 2);
         var glow = addTube(pts, 3.80, 0.35, tint, 0.035, 0.20, 1.00, 1);
+        // 短枝也挂同一条隐形拾取管：主干伸出去的作品枝（直到版本叶片所在的末段）
+        // 都算这条能力的命中区；和主干共用 pickRay，交叉处按最近命中定归属
+        var bp = new THREE.CubicBezierCurve3(
+          new THREE.Vector3(c.p0.x, c.p0.y, c.p0.z),
+          new THREE.Vector3(c.c1.x, c.c1.y, c.c1.z),
+          new THREE.Vector3(c.c2.x, c.c2.y, c.c2.z),
+          new THREE.Vector3(c.p3.x, c.p3.y, c.p3.z));
+        var twigPick = new THREE.Mesh(new THREE.TubeGeometry(bp, 24, 9, 5, false),
+          new THREE.MeshBasicMaterial({ transparent:true, opacity:0, depthWrite:false }));
+        twigPick.frustumCulled = false;
+        branchGroup.add(twigPick);
+        trunkPicks.push({ cap: BRANCH_ORDER[n.__cap], twig:true, mesh:twigPick, pts:null });
         twigMeshes.push({ workId:n.id, mat:solid.material, base:0.54,
                           gmat:glow.material, gbase:0.035,
                           meshes:[solid, glow] });
@@ -924,11 +1428,6 @@
       origin.forEach(function(n){ if (!nodesById[n.id]) nodesById[n.id] = n; });
 
       buildLegend(origin);
-
-      var verCount = origin.reduce(function(a, w){ return a + (w.versionCount || 1); }, 0);
-      document.getElementById("count").innerHTML =
-        origin.length + " 作品<br>" + BRANCH_ORDER.length + " 能力 &nbsp;·&nbsp; " +
-        verCount + " 版本";
 
       graph = ForceGraph3D()(stage)
         .backgroundColor("#05060a")
@@ -1065,14 +1564,21 @@
           return group;
         })
         .onNodeHover(function(n){
+          if (!n && cardHold) return;   // 指针停在卡片上，别把卡片收走
           hoverId = n ? n.id : null;
           updateSprites();
-          if (n){
+          // 只有作品节点与版本叶片弹卡片；根节点、能力节点、骨架点都不弹
+          var cardKind = n && (n.kind === "work" || n.kind === "version");
+          if (n && cardKind){
+            if (cardHideTimer){ clearTimeout(cardHideTimer); cardHideTimer = null; }
             showCard(n);
+          } else if (n){
+            if (cardHideTimer){ clearTimeout(cardHideTimer); cardHideTimer = null; }
+            hideCard();
           } else if (selectedId && nodesById[selectedId]){
             showCard(nodesById[selectedId]);
           } else {
-            hideCard();
+            scheduleCardHide();
           }
         })
         .onNodeClick(function(n){ enter(n); })
@@ -1097,7 +1603,40 @@
                    target: ct ? [ct.x, ct.y, ct.z] : null };
         },
         hover: function(){ return hoverId; },
+        // 调试/自测用：主干上某一点的屏幕坐标与当前联动状态
+        trunkScreen: function(cap){
+          for (var i = 0; i < trunkPicks.length; i++){
+            if (trunkPicks[i].cap !== cap || trunkPicks[i].twig) continue;
+            var pts = trunkPicks[i].pts;
+            var p = pts[Math.floor(pts.length * 0.55)];
+            var v = p.clone().project(graph.camera());
+            return [Math.round((v.x * 0.5 + 0.5) * window.innerWidth),
+                    Math.round((0.5 - v.y * 0.5) * window.innerHeight)];
+          }
+          return null;
+        },
+        trunkHot: function(){ return trunkHot; },
+        // 调试/自测用：短枝贝塞尔上 f 处（0=根部，1=末梢）的屏幕坐标
+        twigScreen: function(id, f){
+          var n = nodesById[id], c = n && n.__curve;
+          if (!c) return null;
+          var p = bez(c.p0, c.c1, c.c2, c.p3, f == null ? 0.45 : f);
+          var v = new THREE.Vector3(p.x, p.y, p.z).project(graph.camera());
+          return [Math.round((v.x * 0.5 + 0.5) * window.innerWidth),
+                  Math.round((0.5 - v.y * 0.5) * window.innerHeight)];
+        },
         baseDist: function(){ return baseDist; },
+        // 调试/自测用：所有叶子节点（作品锚点 + 版本叶片）及其归属能力
+        leaves: function(){
+          var out = [];
+          for (var id in nodesById){
+            var n = nodesById[id];
+            if (n.kind === "work" || n.kind === "version"){
+              out.push({ id:id, kind:n.kind, cap:BRANCH_ORDER[n.__cap] });
+            }
+          }
+          return out;
+        },
         sway: function(){ return { t: swayT, rad: SWAY_RAD, ms: SWAY_MS,
                                    angle: cameraAngle, off: appliedOff,
                                    down: pointerDown,
@@ -1189,29 +1728,53 @@
       });
       var cam = graph.camera();
       var fov = (cam.fov || 50) * Math.PI / 180;
-      // 窄屏时水平视角才是瓶颈：按较窄的那个方向退相机，保证整圈节点可见
       var aspect = window.innerWidth / Math.max(1, window.innerHeight);
       var hFov = 2 * Math.atan(Math.tan(fov / 2) * aspect);
       var narrow = hFov < fov;
       var fitFov = narrow ? hFov : fov;
-      baseDist = (radius + (narrow ? 80 : 0)) / Math.sin(fitFov / 2) *
-                 (narrow ? 1.0 : 0.86);
-      // 作品很少时不要贴得太近：留一个下限，避免叶片/主干被放大成"星球"
-      baseDist = Math.max(baseDist, 600);
-      camRadius = baseDist;
-      // 俯角抬到约 13°；视线目标右偏，主簇落在画面左侧
-      var off = COMP_SHIFT * 2 * baseDist * Math.tan(fov / 2) * aspect;
+      var tanV = Math.tan(fov / 2), tanH = Math.tan(hFov / 2);
+      var yawS = Math.sin(cameraAngle), yawC = Math.cos(cameraAngle);
+      // 相机基向量（与下面的 placeTheStar 保持同一套参数）
+      var fx = -yawS, fy = -PITCH, fz = -yawC;
+      var fl = Math.sqrt(fx*fx + fy*fy + fz*fz);
+      fx /= fl; fy /= fl; fz /= fl;
+      var rx = yawC, rz = -yawS;                 // right = normalize(cross(forward, up))
+      var ux = 0*fz - rz*fy, uy = rz*fx - rx*fz, uz = rx*fy - 0*fx;   // up = cross(right, forward)
+
+      // 整圈均分后是稀疏的三/五叉，用外接球退相机太保守（竖屏会缩成一小团），
+      // 这里按真实投影包围盒迭代求距离。拟合阶段先不计视线右偏，避免"右偏量随距离放大"的正反馈
+      function fitDistance(d){
+        for (var it = 0; it < 5; it++){
+          var need = 0;
+          ns.forEach(function(n){
+            var vx = n.x - center.x, vy = n.y - center.y - d * 0.07, vz = n.z - center.z;
+            var dep = d + (vx*fx + vy*fy + vz*fz);        // 到相机的视深
+            if (dep <= 1) { need = Math.max(need, 1); return; }
+            var px = vx*rx + vz*rz;
+            var py = vx*ux + vy*uy + vz*uz;
+            need = Math.max(need, Math.abs(px) / (0.70 * tanH * dep),
+                                  Math.abs(py) / (0.70 * tanV * dep));
+          });
+          if (!need || Math.abs(need - 1) < 0.01) break;
+          d = Math.max(600, d * need);
+        }
+        return d;
+      }
+      baseDist = fitDistance((radius + (narrow ? 40 : 0)) / Math.sin(fitFov / 2));
+
+      // 俯角约 13°；视线目标右偏让主簇落在左侧，并略微抬高给顶部图例留安全带
+      var off = COMP_SHIFT * 2 * baseDist * tanV * aspect;
       graph.cameraPosition({
-        x: center.x + Math.sin(cameraAngle) * baseDist,
+        x: center.x + yawS * baseDist,
         y: center.y + baseDist * PITCH,
-        z: center.z + Math.cos(cameraAngle) * baseDist
+        z: center.z + yawC * baseDist
       }, {
-        x: center.x + Math.cos(cameraAngle) * off,
-        y: center.y,
-        z: center.z - Math.sin(cameraAngle) * off
+        x: center.x + yawC * off,
+        y: center.y + baseDist * 0.07,
+        z: center.z - yawS * off
       }, 0);
       ready = true;
-      setTimeout(function(){ intro.classList.add("done"); }, REDUCED ? 0 : 260);
+      window.__labMark("ready");
       focusFromQuery();
       if (pendingFocus){
         var n = pendingFocus;
@@ -1261,10 +1824,12 @@
       else cardShotImg.removeAttribute("src");
       cardTitle.textContent = work.title;
       cardMeta.innerHTML = (TYPE_NAMES[work.type] || work.type) + ' &nbsp;·&nbsp; ' +
-        (isWork ? work.model + ' &nbsp;·&nbsp; ' + work.date : "能力节点");
+        (isWork ? esc(work.model || "—") + ' &nbsp;·&nbsp; ' +
+          (v ? esc(v.version + (v.title ? " " + v.title : "")) : esc(work.date || ""))
+          : "能力节点");
 
-      // 提示词只放最新一条的短摘要（2 行截断），完整日志与时间线在详情页
-      var prompt = n.promptSummary || work.promptSummary || work.prompt || "";
+      // 提示词摘要与版本号都取当前版本（作品节点默认最新版本）
+      var prompt = (v && v.promptSummary) || n.promptSummary || work.promptSummary || work.prompt || "";
       card.querySelector(".p").textContent = prompt ? "“" + prompt + "”" : "";
       card.classList.toggle("noprompt", !prompt);
       card.querySelector(".f .d").textContent =
@@ -1278,11 +1843,22 @@
       kEl.textContent = live ? "可交互" : "样张";
       kEl.className = "k" + (live ? " live" : "");
 
+      // 悬停卡片上的主动作：有 HTML 实体的作品直接进全屏查看器播放
+      var openable = isWork && live && !!v;
+      cardAction = openable ? { work: work, ver: v.version } : null;
+      cardGo.hidden = !openable;
+      if (openable){
+        cardGo.innerHTML = "▶&nbsp;&nbsp;" + (work.type === "video" ? "播放" : "打开") +
+          "<b>" + (work.type === "video" ? "PLAY" : "OPEN") + "</b>";
+      }
+
       card.classList.add("on");
       positionCard();
     }
     function hideCard(){
       cardNode = null;
+      cardAction = null;
+      cardGo.hidden = true;
       card.classList.remove("on");
     }
     function positionCard(){
@@ -1291,7 +1867,9 @@
       var v = new THREE.Vector3(cardNode.x, cardNode.y, cardNode.z).project(cam);
       var x = (v.x * 0.5 + 0.5) * window.innerWidth;
       var y = (0.5 - v.y * 0.5) * window.innerHeight;
-      var half = (card.offsetWidth || 212) / 2;
+      var w = card.offsetWidth || 340;
+      var h = card.offsetHeight || 320;
+      var pad = 14, topSafe = 88;
       // 卡片底边要抬到自身光晕之外：把节点球半径投影成像素，再留一点缝
       var sp = sprites[cardNode.id];
       var d = cam.position.distanceTo(
@@ -1299,10 +1877,25 @@
       var pxPer = (window.innerHeight / 2) /
         Math.max(1, d * Math.tan(cam.fov * Math.PI / 360));
       var lift = Math.max(26, (sp ? sp.r * SIZE_K : 8) * 3.4 * pxPer + 14);
-      card.style.left = Math.max(half + 14,
-        Math.min(window.innerWidth - half - 14, x)) + "px";
-      card.style.top = Math.max(170,
-        Math.min(window.innerHeight - 24, y - lift)) + "px";
+      // 优先放在节点上方；顶部放不下就翻到下方；都放不下则改放侧面
+      var above = y - lift - h;
+      var below = y + lift;
+      var clampX = function(v){
+        return Math.max(w / 2 + pad, Math.min(window.innerWidth - w / 2 - pad, v));
+      };
+      var left = clampX(x), top;
+      if (above >= topSafe) top = above;
+      else if (below + h <= window.innerHeight - pad) top = below;
+      else {
+        // 上下都放不下时，原来的做法是把卡片夹到节点上，卡片会盖住节点、吞掉点击；
+        // 改为贴到节点侧面，保证节点始终可点
+        top = Math.max(topSafe, Math.min(window.innerHeight - pad - h, y - h / 2));
+        var rx = x + lift + w / 2, lx = x - lift - w / 2;
+        if (rx + w / 2 <= window.innerWidth - pad) left = rx;
+        else if (lx - w / 2 >= pad) left = lx;
+      }
+      card.style.left = left + "px";
+      card.style.top = top + "px";
     }
 
     function enter(n){
@@ -1518,6 +2111,39 @@
       }
     }
 
+    /* ---------- 枝干悬停：主干 + 短枝隐形拾取管命中后联动图例 ---------- */
+    function setTrunkHot(cap){
+      if (trunkHot === cap) return;
+      trunkHot = cap;
+      var rows = document.querySelectorAll("#legend .lg");
+      for (var i = 0; i < rows.length; i++){
+        var t = rows[i].getAttribute("data-type");
+        var hit = !!cap && t === cap;
+        rows[i].classList.toggle("hot", hit);
+        rows[i].classList.toggle("dim", !!cap && !hit);
+      }
+    }
+
+    function updateTrunkHover(){
+      var cap = null;
+      var hv = hoverId ? nodesById[hoverId] : null;
+      // 叶子（作品/版本）优先：卡片、缩略图、提示词照旧由 onNodeHover 负责，
+      // 这里只把所属能力作为伴随状态点亮图例，不抢叶子自身的可点区域
+      var leafHover = !!(hv && (hv.kind === "work" || hv.kind === "version"));
+      if (leafHover){
+        cap = (hv.__cap != null ? BRANCH_ORDER[hv.__cap] : hv.type) || null;
+      } else if (ptr.has && ready && active && !document.hidden && !pointerDown &&
+          trunkPicks.length){
+        pickRay.setFromCamera(ptr, graph.camera());
+        var bestD = Infinity;
+        for (var i = 0; i < trunkPicks.length; i++){
+          var hit = pickRay.intersectObject(trunkPicks[i].mesh, false)[0];
+          if (hit && hit.distance < bestD){ bestD = hit.distance; cap = trunkPicks[i].cap; }
+        }
+      }
+      setTrunkHot(cap);
+    }
+
     function frame(ts){
       var dt = lastTs ? Math.min(48, ts - lastTs) : 16;
       lastTs = ts;
@@ -1546,8 +2172,13 @@
         var detailK = (DATA && DATA.works && DATA.works.length > 6)
           ? dk * dk * (3 - 2 * dk) : 1;
         var focusNode = hoverId || selectedId;
-        var focusWork = focusNode ?
-          (focusNode.indexOf("@") > -1 ? focusNode.split("@")[0] : focusNode) : null;
+        var focusWork = null;
+        if (focusNode){
+          var fkey = focusNode.indexOf("@") > -1 ? focusNode.split("@")[0] : focusNode;
+          var fnode = nodesById[fkey];
+          // 只有作品/版本算"聚焦"，根节点与能力节点不应把别的枝压暗
+          if (fnode && (fnode.kind === "work" || fnode.kind === "version")) focusWork = fkey;
+        }
 
         for (var id in sprites){
           var sp = sprites[id];
@@ -1637,6 +2268,7 @@
         }
 
         positionCard();
+        updateTrunkHover();
 
         // 21s 呼吸式微摆（±1.5°）。
         // 唯一写入者：每帧从 OrbitControls 的真实位置反解基准方位角（减去上一帧叠加的呼吸偏移），
@@ -1649,7 +2281,7 @@
           var interacting = pointerDown || (now - lastWheel < 320);
           if (cr > 1){
             cameraAngle = Math.atan2(cdx, cdz) - appliedOff;
-            if (!interacting && !REDUCED && selectedId === null && !hoverId) swayT += dt;
+            if (!interacting && !REDUCED && selectedId === null && !hoverId && !cardHold) swayT += dt;
             appliedOff = REDUCED ? 0 :
               Math.sin(swayT / SWAY_MS * Math.PI * 2) * SWAY_RAD;
             var ang = cameraAngle + appliedOff;
@@ -1709,6 +2341,16 @@
       // 相机只有一个写入者（frame 循环）。这里只记录"用户是否正在操作"，
       // 不再用定时器冻结相机——冻结再交还正是"移鼠标视角突变"的根因。
       stage.addEventListener("pointerdown", function(){ pointerDown = true; });
+      // 主干联动需要指针的屏幕坐标与 NDC；只有落在画布上才算"指到星图"
+      window.addEventListener("pointermove", function(e){
+        var t = e.target;
+        ptr.has = !!(t && t.closest && t.closest("#stage"));
+        ptr.x = (e.clientX / window.innerWidth) * 2 - 1;
+        ptr.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        ptr.cx = e.clientX;
+        ptr.cy = e.clientY;
+      }, {passive:true});
+      window.addEventListener("blur", function(){ ptr.has = false; });
       window.addEventListener("pointerup", function(){ pointerDown = false; });
       window.addEventListener("pointercancel", function(){ pointerDown = false; });
       // 滚轮监听挂在 window 捕获阶段：3d-force-graph 的 controls 会拦下 canvas 上的 wheel
@@ -1737,6 +2379,7 @@
       try{
         buildGraph(DATA);
         buildPost();
+        window.__labMark("graph");
       }catch(err){
         fatalMsg("星图无法启动：" + (err && err.message ? err.message : err));
       }
@@ -1760,6 +2403,7 @@
       el.classList.remove("on");
       if (graph) hoverId = null;
       hideCard();
+      setTrunkHot(null);
     }
     function wake(){
       if (active) return;
@@ -1815,10 +2459,13 @@
     var msgA = document.getElementById("vwMsgA");
     var titleEl = document.getElementById("vwTitle");
     var newLink = document.getElementById("vwNew");
-    var cur = { open:false, url:null, entry:null, ver:null };
+    var cur = { open:false, url:null, entry:null, ver:null, extra:null };
     var req = 0, loaded = false, timer = null;
 
-    function entryUrl(entry, ver){
+    function entryUrl(entry, ver, extra){
+      if (extra && extra.path){
+        return "works/" + entry.capability + "/" + entry.id + "/" + extra.path;
+      }
       return "works/" + entry.capability + "/" + entry.id + "/" +
         (ver || entry.currentVersion || "") + "/index.html";
     }
@@ -1847,20 +2494,26 @@
       dropFrame();
       setMsg("作品打不开", reason, [
         {label:"在新窗口打开 ↗", href:url},
-        {label:"重试", on:function(){ open(cur.entry, cur.ver); }},
+        {label:"重试", on:function(){ open(cur.entry, cur.ver, cur.extra); }},
         {label:"返回作品页", on:close}
       ]);
     }
 
-    function open(entry, ver){
+    function open(entry, ver, extra){
       if (!entry) return;
-      var url = entryUrl(entry, ver);
+      var url = entryUrl(entry, ver, extra);
       var my = ++req;
       cur.open = true; cur.url = url; cur.entry = entry; cur.ver = ver;
+      cur.extra = extra || null;
       loaded = false;
       el.classList.add("on");
       el.setAttribute("aria-hidden", "false");
-      titleEl.innerHTML = "NO. " + esc(entry.id) + " &nbsp;·&nbsp; <b>" + esc(entry.title) + "</b>";
+      var vm = versionOf(entry, ver || entry.currentVersion);
+      titleEl.innerHTML = "NO. " + esc(entry.id) + " &nbsp;·&nbsp; <b>" + esc(entry.title) + "</b>" +
+        (vm ? " &nbsp;·&nbsp; " + esc(vm.version) +
+          (vm.title ? " " + esc(vm.title) : "") +
+          (vm.duration ? " · " + esc(vm.duration) : "") : "") +
+        (extra ? " &nbsp;·&nbsp; " + esc(extra.title) : "");
       newLink.href = url;
       dropFrame();
       setMsg("正在加载作品…", url);
@@ -1872,26 +2525,25 @@
         return;
       }
 
-      // file:// 下 Chrome 会拦截"本地页面内嵌本地页面"，先给降级说明，避免白屏
-      if (location.protocol === "file:"){
-        fail(url, "当前以 file:// 打开，浏览器会拦截本地页面的内嵌加载。\n" +
-          "请用「在新窗口打开」，或通过本地 HTTP 服务访问同一目录。");
-        return;
-      }
-      // 先探一次入口是否存在，避免 iframe 载入 404 页面还当成成功
-      fetch(url, {method:"HEAD", cache:"no-cache"}).then(function(r){
-        if (my !== req) return;
-        if (!r.ok) throw new Error("HTTP " + r.status);
+      // file:// 下 Chrome 禁止 fetch 预探测，但允许同源本地 iframe 直接装入
+      var mountFrame = function(){
         frame.onload = function(){
-          frame.onload = null;
           if (my !== req) return;
+          // 清空 src 会异步载入 about:blank；按实际地址识别空载（本地加载可能很快，不能用时间窗判断）
+          var href = null;
+          try { href = frame.contentWindow.location.href; } catch (e) { href = "opaque"; }
+          if (href === "about:blank") return;
+          frame.onload = null;
           loaded = true;
           if (timer){ clearTimeout(timer); timer = null; }
           clearMsg();
+          // 把键盘交给作品本身：空格/方向键直接控制视频与交互，而不是落到页面按钮上
+          try { frame.contentWindow.focus(); } catch (e) {}
           // 焦点进入 iframe 后，Esc 事件不会冒泡到父页面，需在同源子文档里转发一次
+          // （file:// 下 Chrome 把每个本地文件当独立源，读不到子文档，Esc 由顶栏「关闭」兜底）
           try {
-            var doc = frame.contentDocument;
-            if (doc) doc.addEventListener("keydown", function(ev){
+            var d2 = frame.contentDocument;
+            if (d2) d2.addEventListener("keydown", function(ev){
               if (ev.key === "Escape"){ ev.preventDefault(); close(); }
             });
           } catch (e) {}
@@ -1903,6 +2555,18 @@
             "页面较大（视频与图片多为内联数据）。可以继续等待，或在新窗口打开。",
             [{label:"在新窗口打开 ↗", href:url}, {label:"返回作品页", on:close}]);
         }, 9000);
+      };
+
+      if (location.protocol === "file:"){
+        mountFrame();
+        return;
+      }
+
+      // 先探一次入口是否存在，避免 iframe 载入 404 页面还当成成功
+      fetch(url, {method:"HEAD", cache:"no-cache"}).then(function(r){
+        if (my !== req) return;
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        mountFrame();
       }).catch(function(err){
         if (my !== req) return;
         fail(url, "没有找到该版本的 HTML 入口（index.html）。\n" +
@@ -1923,6 +2587,7 @@
       dropFrame();
       clearMsg();
       cur.entry = null;
+      cur.extra = null;
     }
 
     document.getElementById("vwBack").addEventListener("click", close);
@@ -2081,8 +2746,17 @@
 
     function renderMeta(){
       var n = st.entry;
+      var v = versionOf(n, st.ver);
       var color = TYPE_COLORS[n.type] || "#8a8f9c";
       document.getElementById("dtitle").textContent = n.title;
+      // 作品级只留一行整体简介；版本级另起一块，避免文案混搭
+      document.getElementById("dwork").innerHTML =
+        "<b>作品</b>" + esc(n.promptSummary || n.prompt || "—");
+      document.getElementById("dverNo").textContent = st.ver || "—";
+      document.getElementById("dverTitle").textContent = (v && v.title) || "";
+      document.getElementById("dverDur").textContent = (v && v.duration) || "";
+      document.getElementById("dverSum").textContent =
+        (v && (v.summary || v.promptSummary)) || "暂无版本说明";
       var tags = (n.tags || []).map(function(t){ return "<span>" + esc(t) + "</span>"; }).join("");
       var vc = (n.versions || []).length;
       document.getElementById("dsub").innerHTML =
@@ -2091,6 +2765,7 @@
         "<span><em>" + esc(n.model || "—") + "</em></span>" +
         "<span><em>" + esc(n.date || "—") + "</em></span>" +
         (st.ver ? "<span><em>版本 " + esc(st.ver) + "</em>" +
+          (v && v.duration ? " · " + esc(v.duration) : "") +
           (vc > 1 ? " · 共 " + vc + " 版" : "") + "</span>" : "") +
         (n.status === "final"
           ? "<span><em>HTML 入口 · 可交互</em></span>"
@@ -2101,7 +2776,12 @@
       // 查看器入口：只有有 HTML 实体的作品才给按钮；占位件只留图片浏览
       var real = n.status === "final";
       document.getElementById("dact").style.display = real ? "block" : "none";
-      document.getElementById("dopen").onclick = real ? function(){
+      var dopen = document.getElementById("dopen");
+      dopen.innerHTML = (n.type === "video" ? "▶&nbsp;&nbsp;播放作品" : "▶&nbsp;&nbsp;打开作品") +
+        "<i>" + (n.type === "video" ? "PLAY" : "OPEN") + "</i>";
+      dopen.onclick = real ? function(){
+        // 按钮若保持焦点，之后按空格会再次触发"打开"，把作品重载到 0 秒
+        this.blur();
         Viewer.open(st.entry, st.ver);
       } : null;
       document.getElementById("dmarkTag").textContent =
@@ -2220,11 +2900,9 @@
         if (DATA.works[i].id === id){ entry = DATA.works[i]; break; }
       }
       if (!entry){
-        el.classList.add("on");
-        el.setAttribute("aria-hidden", "false");
-        Star.sleep();
-        st.open = true;
-        showFatal(new Error("未找到作品：" + id));
+        // 未知作品：退到能力页，别留一个点了没反应的详情壳
+        if (Viewer.isOpen()) Viewer.close();
+        location.replace("#/" + cap);
         return;
       }
       if (entry.capability !== cap){
@@ -2233,11 +2911,17 @@
                          (ver ? "/" + encodeURIComponent(ver) : ""));
         return;
       }
+      // 查看器开着时切到另一件作品：先关掉旧 iframe，避免盖住新页面
+      if (Viewer.isOpen() && (!st.entry || st.entry.id !== id)) Viewer.close();
       if (st.open && st.entry && st.entry.id === id && st.ver === ver) return;
 
       var vs = versionsDesc(entry);
-      var want = ver && vs.some(function(v){ return v.version === ver; }) ? ver :
-                 (vs[0] ? vs[0].version : null);
+      if (ver && !vs.some(function(v){ return v.version === ver; })){
+        // 未知版本号：纠正到该作品的最新版地址
+        location.replace("#/" + entry.capability + "/" + encodeURIComponent(id));
+        return;
+      }
+      var want = ver || (vs[0] ? vs[0].version : null);
 
       st.open = true;
       st.entry = entry;
@@ -2297,6 +2981,8 @@
         index: st.cur,
         mode: el.classList.contains("is-video") ? "video" : "img",
         prompts: st.bundle ? Object.keys(st.bundle.versionPrompts).length : 0,
+        extras: st.bundle && st.bundle.work && st.bundle.work.extras
+          ? st.bundle.work.extras.length : 0,
         log: st.bundle && st.bundle.promptLog && st.bundle.promptLog.log
           ? st.bundle.promptLog.log.length : 0
       };
@@ -2317,6 +3003,10 @@
 
     window.addEventListener("keydown", function(e){
       if (!st.open) return;
+      // 查看器开着时 Esc 只关查看器，别把作品页也退掉。
+      // 两个监听器都挂在 window 上，查看器那个先执行并用 preventDefault 标了已处理，
+      // 所以这里既看 defaultPrevented，也看查看器状态。
+      if (e.defaultPrevented || Viewer.isOpen()) return;
       if (e.key === "Escape"){ e.preventDefault(); location.hash = "#/"; return; }
       if (e.key === "ArrowLeft" || e.key === "PageUp"){ e.preventDefault(); showSlide(st.cur - 1); }
       if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " "){
@@ -2378,7 +3068,7 @@
         return ka === kb ? a.id.localeCompare(b.id) : kb.localeCompare(ka);
       });
       document.getElementById("cpHead").innerHTML =
-      "能力 / CAPABILITY<b>" + esc(meta.name) + " · " + esc(meta.en) + "</b>" +
+      "<b>" + esc(meta.name) + " · " + esc(meta.en) + "</b>" +
       '<span style="display:block;margin-top:6px;letter-spacing:.16em">' +
       (list.length ? list.length + " 件作品" : "暂无作品") + "</span>";
     document.getElementById("cpList").innerHTML = list.length ? list.map(function(w){
@@ -2449,7 +3139,7 @@
     fatal.textContent = "星图无法启动：" + (err && err.message ? err.message : err) +
       "\n若为 file:// 打开，请先运行 tools/build_index.py 生成 data/index.js。";
     fatal.classList.add("on");
-    document.getElementById("intro").classList.add("done");
+    window.__labLoaderStop();
   }
 
   window.__aiLabState = function(){
@@ -2465,6 +3155,7 @@
 
   loadIndex().then(function(data){
     DATA = data;
+    window.__labMark("data");
     Star.boot();
     route();
   }).catch(bootFail);

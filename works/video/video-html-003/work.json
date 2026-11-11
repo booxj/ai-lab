@@ -1,0 +1,23 @@
+{
+  "id": "video-html-003",
+  "title": "鹈鹕骑自行车 / Pelican Rider",
+  "type": "video",
+  "capability": "video",
+  "model": "HTML",
+  "series": null,
+  "tags": [
+    "SVG",
+    "手写动画",
+    "单文件",
+    "六段风格"
+  ],
+  "status": "final",
+  "date": "2026-11-10",
+  "createdAt": "2026-11-10T16:51+08:00",
+  "currentVersion": "20261110",
+  "versions": [
+    "20261110"
+  ],
+  "prompt": "使用svg从66个视频风格随机挑6个生成鹈鹕骑自行车的视频，并保证剧情连续",
+  "promptSummary": "单文件 SVG 动画：66 种风格随机取 6 种，鹈鹕骑车，104 秒剧情连贯"
+}

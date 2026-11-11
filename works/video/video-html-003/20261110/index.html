@@ -1,0 +1,1285 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>给灯塔的信 · A Letter to the Lighthouse</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#0a0a0a;overflow:hidden}
+  body{display:flex;align-items:center;justify-content:center}
+  #frame{position:relative;width:min(100vw,177.78vh);height:min(56.25vw,100vh);background:#F4EFE4;
+         box-shadow:0 0 90px rgba(0,0,0,.85)}
+  #stage{display:block;width:100%;height:100%}
+  #hud{position:absolute;left:0;right:0;bottom:0;padding:0 26px 16px;pointer-events:none;
+       font:500 12px/1.2 ui-sans-serif,-apple-system,"PingFang SC",sans-serif;color:#8c8378;
+       letter-spacing:.09em;opacity:.85;transition:color .5s}
+  #hud.on-dark{color:#b9ae9b}
+  #bar{position:relative;height:28px;margin:-12px -2px 2px;cursor:pointer;pointer-events:auto;
+       touch-action:none;border-radius:4px;outline:none}
+  #bar:focus-visible{outline:2px solid rgba(201,162,39,.75);outline-offset:3px}
+  #track{position:absolute;left:0;right:0;top:12px;height:3px;background:rgba(92,84,72,.34);border-radius:2px}
+  #fill{position:absolute;left:0;top:12px;height:3px;width:0;background:#6b6355;border-radius:2px}
+  #hud.on-dark #track{background:rgba(255,252,244,.26)}
+  #hud.on-dark #fill{background:#e6bf55}
+  #knob{position:absolute;top:9px;left:0;width:9px;height:9px;margin-left:-4.5px;border-radius:50%;
+        background:#6b6355;box-shadow:0 0 0 2px rgba(246,241,231,.92),0 1px 3px rgba(0,0,0,.25);
+        pointer-events:none;transition:transform .12s}
+  #hud.on-dark #knob{background:#e6bf55;box-shadow:0 0 0 2px rgba(18,22,20,.8),0 1px 3px rgba(0,0,0,.4)}
+  #bar:hover #knob,#bar.drag #knob{transform:scale(1.35)}
+  .tick{position:absolute;top:9px;width:1px;height:9px;background:rgba(110,101,88,.45)}
+  #hud.on-dark .tick{background:rgba(201,162,39,.5)}
+  #meta{display:flex;justify-content:space-between;align-items:center;gap:20px}
+  #chap{font-weight:600;letter-spacing:.12em}
+  #tc{font-variant-numeric:tabular-nums;opacity:.8}
+  #keys{position:absolute;left:26px;top:16px;font:400 11px/1 ui-sans-serif,-apple-system,sans-serif;
+        color:rgba(140,131,120,.5);letter-spacing:.08em}
+  #model{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;
+         padding:4px 9px;border-radius:999px;background:rgba(14,12,10,.84);
+         border:1px solid rgba(232,208,154,.45);color:#f3e9d3;
+         font:600 10px/1 ui-sans-serif,-apple-system,"PingFang SC",sans-serif;letter-spacing:.06em;
+         box-shadow:0 1px 9px rgba(0,0,0,.32);pointer-events:none;white-space:nowrap}
+  #model i{width:6px;height:6px;border-radius:50%;background:#d9b45c;
+           box-shadow:0 0 6px rgba(217,180,92,.85)}
+  #model b{color:#fff;font-weight:700;letter-spacing:.05em}
+  #scrub{position:absolute;z-index:9;display:none;transform:translateX(-50%);
+         padding:6px 10px;border-radius:6px;background:rgba(14,12,10,.92);color:#f5ecd8;
+         border:1px solid rgba(232,208,154,.38);
+         font:600 12px/1 ui-sans-serif,-apple-system,"PingFang SC",sans-serif;
+         letter-spacing:.07em;white-space:nowrap;pointer-events:none;
+         box-shadow:0 3px 14px rgba(0,0,0,.4)}
+  #scrub.on{display:block}
+  @media (max-width:680px){
+    #hud{padding:0 14px 10px;font-size:10px;letter-spacing:.06em}
+    #meta{gap:8px;flex-wrap:nowrap}
+    #chap{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #tc{flex:0 0 auto}
+    #model{flex:0 0 auto;padding:3px 7px;font-size:9px;letter-spacing:.03em}
+    #model i{width:5px;height:5px}
+    #keys{left:14px;top:10px;font-size:9px;max-width:78%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #scrub{padding:4px 8px;font-size:10px}
+  }
+</style>
+</head>
+<body>
+<div id="frame">
+<svg id="stage" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- ===== shared paper / texture filters ===== -->
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="11" result="n"/>
+      <feColorMatrix in="n" type="matrix"
+        values="0 0 0 0 0.42  0 0 0 0 0.36  0 0 0 0 0.30  0 0 0 0.10 0"/>
+    </filter>
+    <filter id="grainSoft" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.62" numOctaves="2" seed="4" result="n"/>
+      <feColorMatrix in="n" type="matrix"
+        values="0 0 0 0 0.5  0 0 0 0 0.48  0 0 0 0 0.44  0 0 0 0.055 0"/>
+    </filter>
+    <filter id="wcEdge" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.05" numOctaves="3" seed="19" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="7" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="wcBleed" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.008 0.03" numOctaves="4" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="22" xChannelSelector="R" yChannelSelector="G"/>
+      <feGaussianBlur stdDeviation="1.1"/>
+    </filter>
+    <filter id="chalk" x="-6%" y="-6%" width="112%" height="112%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="3" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="chalkSoft" x="-6%" y="-6%" width="112%" height="112%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.4" numOctaves="2" seed="8" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="4.5" xChannelSelector="R" yChannelSelector="G"/>
+      <feGaussianBlur stdDeviation="0.5"/>
+    </filter>
+    <filter id="blurBand"><feGaussianBlur stdDeviation="26"/></filter>
+
+    <!-- ===== risograph ===== -->
+    <pattern id="risoDots" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(15)">
+      <circle cx="4.5" cy="4.5" r="2.5" fill="#00838A"/>
+    </pattern>
+    <pattern id="risoDots2" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(75)">
+      <circle cx="4.5" cy="4.5" r="2.2" fill="#FF7477"/>
+    </pattern>
+
+    <!-- ===== engraving hatching ===== -->
+    <pattern id="hA" width="5.6" height="5.2" patternUnits="userSpaceOnUse" patternTransform="rotate(34)">
+      <path d="M0.75 0 L1.35 1.15 L1.35 4.05 L0.75 5.2 L0.15 4.05 L0.15 1.15 Z" fill="#1c1510"/>
+    </pattern>
+    <pattern id="hB" width="5" height="4.6" patternUnits="userSpaceOnUse" patternTransform="rotate(-31)">
+      <path d="M0.65 0 L1.2 1.0 L1.2 3.6 L0.65 4.6 L0.1 3.6 L0.1 1.0 Z" fill="#1c1510"/>
+    </pattern>
+    <pattern id="hSky" width="10" height="8" patternUnits="userSpaceOnUse">
+      <path d="M0 4 Q2.5 3.3 5 4 T10 4" stroke="#1c1510" stroke-width="0.9" fill="none"/>
+    </pattern>
+    <pattern id="hStip" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(12)">
+      <circle cx="2" cy="2" r="0.9" fill="#1c1510"/><circle cx="6" cy="5.5" r="0.7" fill="#1c1510"/>
+    </pattern>
+
+    <!-- ===== art deco ===== -->
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8a6320"/><stop offset=".22" stop-color="#e8c477"/>
+      <stop offset=".44" stop-color="#fff2c8"/><stop offset=".62" stop-color="#d9a441"/>
+      <stop offset="1" stop-color="#7c5518"/>
+    </linearGradient>
+    <linearGradient id="goldH" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7c5518"/><stop offset=".3" stop-color="#e8c477"/>
+      <stop offset=".5" stop-color="#fff6dc"/><stop offset=".72" stop-color="#d9a441"/>
+      <stop offset="1" stop-color="#8a6320"/>
+    </linearGradient>
+    <linearGradient id="airBody" x1="0.15" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#fdf6e4"/><stop offset=".45" stop-color="#e6d8bb"/>
+      <stop offset="1" stop-color="#a2937a"/>
+    </linearGradient>
+    <linearGradient id="airBeak" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#f7e6bd"/><stop offset=".5" stop-color="#dcae62"/>
+      <stop offset="1" stop-color="#9a6a24"/>
+    </linearGradient>
+    <radialGradient id="lampGlow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#fff3c4" stop-opacity=".95"/>
+      <stop offset=".45" stop-color="#f0c96a" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#f0c96a" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- ===== dynamic clips ===== -->
+    <clipPath id="clipS2"><path id="s2wipePath" d="M-40 -40 H -60 V 1120 H -40 Z"/></clipPath>
+    <clipPath id="clipS3"><path id="s3wipePath" d="M-40 -40 H -60 V 1120 H -40 Z"/></clipPath>
+    <clipPath id="clipS5"><path id="s5wipePath" d="M-40 -40 H -60 V 1120 H -40 Z"/></clipPath>
+    <clipPath id="clipS6"><circle id="s6iris" cx="1530" cy="330" r="0"/></clipPath>
+    <clipPath id="roundelClip"><circle cx="1530" cy="330" r="184"/></clipPath>
+    <clipPath id="clipS1Title"><rect id="s1titleClip" x="0" y="0" width="0" height="1080"/></clipPath>
+    <clipPath id="s1BodyClip"><path id="s1bodyClipPath" d=""/></clipPath>
+  </defs>
+
+  <g id="scenes"></g>
+  <g id="fx" pointer-events="none">
+    <rect id="rollerBand" x="-999" y="-40" width="120" height="1160" fill="#FF7477" opacity=".42" filter="url(#blurBand)" style="display:none"/>
+    <rect id="rollerCore" x="-999" y="-40" width="26" height="1160" fill="#FF7477" opacity=".55" style="display:none"/>
+  </g>
+</svg>
+<div id="keys">space 暂停 · R 重播 · C 章节 · ← → ±1s · shift ±5s</div>
+<div id="scrub"></div>
+<div id="hud">
+  <div id="bar" role="slider" aria-label="播放进度" aria-valuemin="0" aria-valuemax="104" aria-valuenow="0" tabindex="0">
+    <div id="track"></div>
+    <div id="fill"></div>
+    <div id="knob"></div>
+  </div>
+  <div id="meta">
+    <span id="chap">01 · 一笔画</span>
+    <span id="tc">00:00 / 01:44</span>
+    <span id="model"><i></i>画面代码 · <b>DeepSeek-V4.1-Flash</b></span>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const NS="http://www.w3.org/2000/svg";
+const W=1920, H=1080, GROUND=902, RX=760, RY=900, RS=1.28;
+
+/* ============================================================
+   TIMELINE
+   ============================================================ */
+const SEG=[
+  {id:"s1", cn:"一笔画",   en:"ONE-LINE",     t0:0.0,  t1:16.0},
+  {id:"s2", cn:"水彩",     en:"WATERCOLOUR",  t0:16.0, t1:33.5},
+  {id:"s3", cn:"孔版印刷", en:"RISOGRAPH",    t0:33.5, t1:50.5},
+  {id:"s4", cn:"黑板粉笔", en:"CHALKBOARD",   t0:50.5, t1:68.0},
+  {id:"s5", cn:"铜版画",   en:"COPPERPLATE",  t0:68.0, t1:85.5},
+  {id:"s6", cn:"装饰艺术", en:"ART DECO",     t0:85.5, t1:104.0}
+];
+const TOTAL=104.0;
+/* transition windows: [start, end, kind] */
+const TRANS=[
+  {at:16.0, a:15.0, b:17.0, kind:"brush"},
+  {at:33.5, a:33.0, b:34.6, kind:"roller"},
+  {at:50.5, a:49.7, b:51.4, kind:"panel"},
+  {at:68.0, a:67.0, b:69.6, kind:"eraser"},
+  {at:85.5, a:84.4, b:87.0, kind:"iris"}
+];
+
+/* ============================================================
+   SMALL UTILS
+   ============================================================ */
+const TAU=Math.PI*2;
+const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+const lerp=(a,b,u)=>a+(b-a)*u;
+const eio=u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+const eo=u=>1-Math.pow(1-u,3);
+const ei=u=>u*u*u;
+const sm=(a,b,x)=>{const u=clamp((x-a)/(b-a),0,1);return u*u*(3-2*u);};
+const f1=n=>Math.round(n*10)/10;
+const pad2=n=>String(n).padStart(2,"0");
+
+/* ============================================================
+   THE RIDER — one geometry, six renderings
+   ============================================================ */
+const BIKE={
+  wr:76, rear:[-150,-76], front:[150,-76], bb:[0,-72],
+  seat:[-54,-196], headTop:[104,-216], headBot:[92,-160], bar:[126,-236]
+};
+const BODY_D="M-150 -246 C-158 -292 -118 -326 -64 -330 C-14 -334 24 -314 32 -282 C40 -252 20 -226 -10 -216 C-56 -200 -118 -206 -140 -228 C-148 -236 -150 -240 -150 -246 Z";
+const TAIL_D="M-140 -246 L-198 -268 L-184 -240 L-200 -226 L-142 -220 Z";
+const NECK_D="M-8 -286 C8 -322 20 -348 30 -366 L58 -384 C46 -352 34 -316 20 -304 Z";
+const HEAD_D="M66 -400 m-36 0 a36 30 0 1 0 72 0 a36 30 0 1 0 -72 0";
+const BEAK_D="M92 -428 C150 -432 230 -420 282 -402 C288 -400 288 -394 280 -392 C226 -386 150 -390 90 -400 Z";
+const POUCH_D="M98 -400 C104 -378 132 -362 176 -362 C216 -362 250 -376 268 -390 C226 -386 152 -386 98 -400 Z";
+const WING_D="M-20 -300 C20 -300 74 -282 108 -246 C118 -236 114 -226 100 -226 C76 -226 54 -240 38 -254 C18 -268 -4 -278 -26 -284";
+const BASKET_D="M132 -286 L222 -286 L216 -220 L138 -220 Z";
+/* webbed claw, drawn centred on (0,0) so it can be anchored to the pedal axle */
+const FOOT_D="M-10 3 L-5 -5 L3 -6 L10 -1 L9 3 L2 5 L-4 5 Z";
+
+function spokes(){
+  let s="";
+  for(let i=0;i<12;i++){
+    const a=i*Math.PI/6;
+    s+='<line class="spoke" x1="0" y1="0" x2="'+f1(58*Math.cos(a))+'" y2="'+f1(58*Math.sin(a))+'"/>';
+  }
+  return s;
+}
+function wheel(which){
+  const p = which==="A" ? BIKE.rear : BIKE.front;
+  return '<g class="wheel wheel'+which+'" transform="translate('+p[0]+','+p[1]+')">'
+    +'<circle class="pr-tire" r="76"/>'
+    +'<circle class="pr-rim" r="63"/>'
+    +'<g class="spokes">'+spokes()+'</g>'
+    +'<circle class="pr-hub" r="6.5"/>'
+    +'</g>';
+}
+function riderMarkup(mode,idp){
+  const g='<g class="rider" id="'+idp+'">';
+  const backLeg='<path class="pr-legB" d=""/><path class="pr-footB" d="'+FOOT_D+'"/>';
+  const bike=
+    wheel("A")+wheel("B")
+    +'<path class="pr-frame" d="M-150 -76 L0 -72 M-150 -76 L-54 -196 M-54 -196 L0 -72 M0 -72 L92 -160 M-54 -196 L104 -216 M92 -160 L104 -216 M92 -160 L150 -76 M104 -216 L126 -236"/>'
+    +'<path class="pr-bar" d="M126 -236 C146 -245 161 -239 157 -226"/>'
+    +'<path class="pr-saddle" d="M-74 -200 L-30 -205"/>'
+    +'<g class="crankG" transform="translate(0,-72)">'
+      +'<g class="crank"><path class="pr-crank" d="M-44 0 L44 0"/></g>'
+      +'<g class="pedalA"><rect class="pr-pedal" x="-13" y="-4" width="26" height="8" rx="2"/></g>'
+      +'<g class="pedalB"><rect class="pr-pedal" x="-13" y="-4" width="26" height="8" rx="2"/></g>'
+      +'<circle class="pr-hub" r="7"/></g>';
+  const bird=
+    '<path class="pr-tail" d="'+TAIL_D+'"/>'
+    +'<path class="pr-body" d="'+BODY_D+'"/>'
+    +'<path class="pr-neck" d="'+NECK_D+'"/>'
+    +'<path class="pr-head" d="'+HEAD_D+'"/>'
+    +'<path class="pr-beak" d="'+BEAK_D+'"/>'
+    +'<path class="pr-pouch" d="'+POUCH_D+'"/>'
+    +'<path class="pr-crest" d="M36 -420 C28 -436 18 -440 10 -438 M44 -426 C40 -442 32 -448 24 -449"/>'
+    +'<circle class="pr-eye" cx="76" cy="-408" r="4.8"/>'
+    +'<path class="pr-cheek" d="M46 -392 C58 -384 76 -382 90 -388"/>'
+    +'<path class="pr-wing" d="'+WING_D+'"/>'
+    +'<path class="pr-feather" d="M30 -266 C50 -260 68 -250 84 -238 M14 -278 C36 -272 54 -262 70 -250"/>'
+    +'<path class="pr-scarf" d=""/>'
+    +'<path class="pr-legA" d=""/><path class="pr-footA" d=""/>'
+    +'<path class="pr-basket" d="'+BASKET_D+'"/>'
+    +'<g class="pr-wicker">'
+      +'<path d="M140 -272 L214 -272 M142 -258 L213 -258 M144 -244 L211 -244 M146 -230 L208 -230"/>'
+    +'</g>'
+    +'<g class="letterG" transform="translate(150,-282) rotate(-7)">'
+      +'<rect class="pr-letter" x="0" y="0" width="58" height="38" rx="2"/>'
+      +'<path class="pr-letterSeam" d="M0 0 L29 21 L58 0"/>'
+    +'</g>';
+  return g+backLeg+bike+bird+'</g>';
+}
+
+/* ---- rider state machine ---- */
+function makeRider(mode,idp){
+  const host=document.getElementById("scenes");
+  const wrap=document.createElementNS(NS,"g");
+  wrap.setAttribute("id",idp+"-wrap");
+  wrap.setAttribute("transform","translate("+RX+","+RY+") scale("+RS+")");
+  wrap.innerHTML=riderMarkup(mode,idp);
+  const r={
+    mode, node:wrap,
+    q:s=>wrap.querySelector(s),
+    wheelA:null,wheelB:null,crank:null,pA:null,pB:null,
+    legA:null,legB:null,footA:null,footB:null,scarf:null,
+    body:null,head:null,letter:null
+  };
+  r.wheelA=wrap.querySelector(".wheelA");
+  r.wheelB=wrap.querySelector(".wheelB");
+  r.crank=wrap.querySelector(".crank");
+  r.pA=wrap.querySelector(".pedalA");
+  r.pB=wrap.querySelector(".pedalB");
+  r.legA=wrap.querySelector(".pr-legA");
+  r.legB=wrap.querySelector(".pr-legB");
+  r.footA=wrap.querySelector(".pr-footA");
+  r.footB=wrap.querySelector(".pr-footB");
+  r.scarf=wrap.querySelector(".pr-scarf");
+  r.body=wrap.querySelector(".pr-body");
+  r.head=wrap.querySelector(".pr-head");
+  r.letter=wrap.querySelector(".letterG");
+  r.update=function(t,cad,amp){
+    const th=cad*t;
+    const c=Math.cos(th), s=Math.sin(th);
+    const bb=BIKE.bb;
+    const p1=[bb[0]+44*c, bb[1]+44*s];
+    const p2=[bb[0]-44*c, bb[1]-44*s];
+    this.wheelA.setAttribute("transform","translate("+BIKE.rear[0]+","+BIKE.rear[1]+") rotate("+f1(th*57.2958*0.62)+")");
+    this.wheelB.setAttribute("transform","translate("+BIKE.front[0]+","+BIKE.front[1]+") rotate("+f1(th*57.2958*0.62)+")");
+    this.crank.setAttribute("transform","rotate("+f1(th*57.2958)+")");
+    this.pA.setAttribute("transform","translate("+f1(p1[0]-bb[0])+","+f1(p1[1]-bb[1])+")");
+    this.pB.setAttribute("transform","translate("+f1(p2[0]-bb[0])+","+f1(p2[1]-bb[1])+")");
+    /* ankle is pinned to the pedal axle; knee comes from the two-bone solution.
+       heel dips a little around bottom dead centre (sin th ≈ 1). */
+    const hip=[-24,-216];
+    const fa=-2.5-5.5*s;
+    const leg=(ankle,el,ft)=>{
+      const k=ik(hip,ankle);
+      el.setAttribute("d","M"+hip[0]+" "+hip[1]+" L"+f1(k[0])+" "+f1(k[1])+" L"+f1(ankle[0])+" "+f1(ankle[1]));
+      ft.setAttribute("transform","translate("+f1(ankle[0])+","+f1(ankle[1])+") rotate("+f1(fa)+")");
+    };
+    leg(p1,this.legA,this.footA);
+    leg(p2,this.legB,this.footB);
+    // scarf — tapered ribbon trailing behind the neck
+    const pts=[];
+    for(let i=0;i<=8;i++){
+      const x=14-i*28;
+      const y=-332-i*2.0+Math.sin(t*4.2-i*.62)*amp*(1+i*.06);
+      pts.push([x,y]);
+    }
+    let d="";
+    for(let i=0;i<pts.length;i++) d+=(i?" L":"M")+f1(pts[i][0])+" "+f1(pts[i][1]);
+    for(let i=pts.length-1;i>=0;i--){
+      const w=(26-(22)*(i/(pts.length-1)))*0.62;
+      d+=" L"+f1(pts[i][0])+" "+f1(pts[i][1]+w);
+    }
+    this.scarf.setAttribute("d",d+" Z");
+  };
+  return r;
+}
+function ik(hip,foot){
+  const l1=98,l2=100;
+  const dx=foot[0]-hip[0], dy=foot[1]-hip[1];
+  const d=Math.max(Math.hypot(dx,dy),1);
+  const a=Math.atan2(dy,dx);
+  const cosv=clamp((l1*l1+d*d-l2*l2)/(2*l1*d),-1,1);
+  const ang=Math.acos(cosv);
+  const k1=[hip[0]+l1*Math.cos(a-ang),hip[1]+l1*Math.sin(a-ang)];
+  const k2=[hip[0]+l1*Math.cos(a+ang),hip[1]+l1*Math.sin(a+ang)];
+  return k1[0]>k2[0]?k1:k2;
+}
+
+
+/* ============================================================
+   SCENE 1 — ONE LINE
+   ============================================================ */
+function buildS1(){
+  const g=document.createElementNS(NS,"g");
+  g.setAttribute("id","s1");
+  const hills="M-40 800 C140 716 250 706 360 760 C470 814 560 806 650 770 L650 902";
+  const hills2="M1240 812 C1400 744 1520 736 1650 784 C1780 832 1880 820 1960 792";
+  g.innerHTML=
+    '<rect width="1920" height="1080" fill="#F4EFE4"/>'
+    +'<rect width="1920" height="1080" filter="url(#grain)"/>'
+    /* far line art */
+    +'<g class="ol">'
+      +'<path class="ol-line" d="M-20 902 L1940 902"/>'
+      +'<path class="ol-line" d="'+hills+'"/>'
+      +'<path class="ol-line" d="'+hills2+'"/>'
+      +'<circle class="ol-line" cx="1522" cy="296" r="96"/>'
+      +'<path class="ol-line" d="M1380 330 C1400 322 1420 322 1440 330 M1466 352 C1486 344 1506 344 1526 352"/>'
+      +'<path class="ol-line" d="M250 800 C300 760 360 758 410 796 M430 806 C500 764 570 766 630 804"/>'
+      +'<path class="ol-line" d="M1680 300 c14 -10 30 -10 44 0 c-14 2 -28 2 -44 0 Z M1740 330 c12 -9 26 -9 38 0 c-12 2 -26 2 -38 0 Z"/>'
+      +'<path class="ol-line" d="M96 700 l0 -150 M96 690 c-26 -18 -34 -50 -30 -78 M96 668 c24 -16 34 -46 30 -76"/>'
+      +'<path class="ol-line" d="M16 718 C60 706 120 706 164 718"/>'
+      /* lighthouse far right — the destination, drawn first */
+      +'<path class="ol-line" d="M1744 902 L1758 620 L1806 620 L1820 902 Z"/>'
+      +'<path class="ol-line" d="M1752 700 L1812 700 M1755 760 L1815 760 M1750 820 L1818 820"/>'
+      +'<path class="ol-line" d="M1752 620 L1760 596 L1804 596 L1812 620 Z"/>'
+      +'<path class="ol-line" d="M1782 596 L1782 566"/>'
+      +'<path class="ol-line" d="M1770 566 L1794 566"/>'
+      +'<path class="ol-line" d="M1756 560 L1700 540 M1808 560 L1864 540"/>'
+      /* sea + road */
+      +'<path class="ol-line" d="M-20 950 L1940 950"/>'
+      +'<path class="ol-line" d="M120 986 L340 986 M420 986 L640 986 M720 986 L940 986 M1020 986 L1240 986 M1320 986 L1540 986 M1620 986 L1840 986"/>'
+    +'</g>'
+    /* rider */
+    +'<g id="s1-rider"></g>'
+    /* title */
+    +'<g clip-path="url(#clipS1Title)">'
+      +'<text class="ol-title" x="118" y="176">给灯塔的信</text>'
+      +'<text class="ol-sub" x="122" y="216">A LETTER TO THE LIGHTHOUSE</text>'
+    +'</g>'
+    +'<rect width="1920" height="1080" filter="url(#grainSoft)" opacity=".7"/>';
+  return g;
+}
+
+/* ============================================================
+   SCENE 2 — WATERCOLOUR
+   ============================================================ */
+function buildS2(){
+  const g=document.createElementNS(NS,"g");
+  g.setAttribute("id","s2");
+  g.innerHTML=
+    '<rect width="1920" height="1080" fill="#f6ead6"/>'
+    +'<g class="wc" filter="url(#wcEdge)">'
+      +'<rect x="-300" y="-40" width="2400" height="620" fill="#f3e2c8"/>'
+      +'<circle cx="1450" cy="250" r="118" fill="#f0c98e" opacity=".5"/>'
+      +'<path d="M-300 592 C240 570 470 596 720 580 C980 564 1200 592 1500 576 C1700 566 1860 586 2100 574 L2100 646 L-300 646 Z" fill="#e6d3b4" opacity=".8"/>'
+      +'<rect x="-300" y="600" width="2400" height="210" fill="#9fb4c4" opacity=".82"/>'
+      +'<path d="M-300 660 C200 648 420 666 660 658 C900 650 1120 666 1360 660 C1580 654 1800 664 2100 658" stroke="#7d95a8" stroke-width="3" fill="none" opacity=".5"/>'
+      +'<path d="M-300 726 C260 714 520 734 780 724 C1040 714 1300 732 1560 722 C1740 716 1880 724 2100 720" stroke="#7d95a8" stroke-width="2.4" fill="none" opacity=".4"/>'
+      /* headland */
+      +'<path d="M1400 760 C1480 640 1600 566 1760 556 C1866 550 1936 596 2100 630 L2100 760 Z" fill="#5f7486" opacity=".9"/>'
+      +'<path d="M1460 760 C1532 668 1640 600 1766 594" stroke="#48596a" stroke-width="4" fill="none" opacity=".5"/>'
+    +'</g>'
+    /* foreshore */
+    +'<g class="wc" filter="url(#wcEdge)">'
+      +'<path d="M-300 770 C200 758 400 782 640 772 C880 762 1080 786 1320 776 C1560 766 1800 784 2250 776 L2250 1100 L-300 1100 Z" fill="#d3c3a4"/>'
+      +'<path d="M-300 792 C200 780 420 802 660 792 C900 782 1150 802 1400 794 C1640 786 1840 800 2100 794" stroke="#b3a184" stroke-width="5" fill="none" opacity=".55"/>'
+      +'<path d="M120 990 C240 970 360 972 470 988 M980 1010 C1100 992 1220 994 1330 1010 M1560 972 C1660 958 1760 960 1850 974" stroke="#a8977a" stroke-width="5" fill="none" opacity=".4"/>'
+    +'</g>'
+    +'<g id="s2-rider"></g>'
+    +'<g class="wc-notes">'
+      +'<path d="M330 300 L470 386" stroke="#7a6a55" stroke-width="1.4" fill="none"/>'
+      +'<circle cx="330" cy="300" r="4" fill="#7a6a55"/>'
+      +'<text class="wc-note" x="180" y="288">06:12 · 涨潮</text>'
+      +'<text class="wc-note2" x="180" y="318">COAST ROAD / 海岸公路</text>'
+      +'<path d="M1472 486 L1704 592" stroke="#7a6a55" stroke-width="1.2" fill="none"/>'
+      +'<circle cx="1472" cy="486" r="3.6" fill="#7a6a55"/>'
+      +'<text class="wc-note2" x="1470" y="470">海岬 · 3.6 km</text>'
+    +'</g>'
+    /* wet edge that rides along the brush wipe */
+    +'<path id="wetEdgeCream" fill="none" stroke="#f4e3c6" stroke-width="40" opacity=".7" filter="url(#wcBleed)"/>'
+    +'<path id="wetEdgeInk" fill="none" stroke="#8b7a62" stroke-width="2" opacity=".32"/>'
+    +'<rect width="1920" height="1080" filter="url(#grainSoft)" opacity=".8"/>';
+  return g;
+}
+
+/* ============================================================
+   SCENE 3 — RISOGRAPH
+   ============================================================ */
+function buildS3(){
+  const g=document.createElementNS(NS,"g");
+  g.setAttribute("id","s3");
+  const bld=[];
+  const bl=[[-40,470,150,430],[128,520,120,380],[268,430,92,470],[376,560,140,340],[534,470,104,430],[654,510,150,390],[820,440,110,460],[946,540,130,360],[1094,470,96,430],[1206,520,150,380],[1374,450,110,450],[1500,540,120,360],[1640,470,140,430],[1798,520,130,380]];
+  bl.forEach((b,i)=>{
+    bld.push('<rect x="'+b[0]+'" y="'+b[1]+'" width="'+b[2]+'" height="'+b[3]+'" fill="'+(i%2?"#00838A":"#00727B")+'"/>');
+    // windows
+    for(let r=0;r<Math.floor(b[3]/70)-1;r++){
+      for(let c=0;c<Math.floor(b[2]/46)-0;c++){
+        if((r+c+i)%3===0) continue;
+        bld.push('<rect x="'+(b[0]+20+c*46)+'" y="'+(b[1]+34+r*70)+'" width="18" height="26" fill="#F4EEE2" opacity="'+(0.55+((r*c)%3)*0.12)+'"/>');
+      }
+    }
+  });
+  g.innerHTML=
+    '<rect width="1920" height="1080" fill="#F4EEE2"/>'
+    /* sky halftone */
+    +'<rect x="-40" y="-40" width="2000" height="620" fill="url(#risoDots)" opacity=".34"/>'
+    +'<circle cx="1452" cy="270" r="150" fill="#FF7477" style="mix-blend-mode:multiply"/>'
+    +'<rect x="-40" y="-40" width="2000" height="620" fill="url(#risoDots2)" opacity=".18"/>'
+    /* beach / road */
+    +'<rect x="-40" y="620" width="2000" height="300" fill="#00838A" opacity=".16"/>'
+    +'<g id="s3-city" transform="translate(0,-100)">'+bld.join("")+'</g>'
+    +'<rect x="-40" y="800" width="2000" height="320" fill="#00727B"/>'
+    +'<path d="M-40 800 L1960 800" stroke="#F4EEE2" stroke-width="5" opacity=".5"/>'
+    +'<g stroke="#F4EEE2" stroke-width="6" opacity=".45">'
+      +'<path d="M-40 900 L1960 900" stroke-dasharray="60 54"/>'
+    +'</g>'
+    +'<g id="s3-rider"></g>'
+    +'<g class="riso-type">'
+      +'<text class="riso-cn" x="118" y="176">镇</text>'
+      +'<text class="riso-en" x="200" y="176">TOWN · 09:40</text>'
+      +'<rect x="118" y="196" width="330" height="5" fill="#FF7477"/>'
+    +'</g>'
+    +'<rect width="1920" height="1080" filter="url(#grainSoft)" opacity=".55"/>';
+  return g;
+}
+
+/* ============================================================
+   SCENE 4 — CHALKBOARD
+   ============================================================ */
+function buildS4(){
+  const g=document.createElementNS(NS,"g");
+  g.setAttribute("id","s4");
+  g.innerHTML=
+    '<rect width="1920" height="1080" fill="#2b2a26"/>'
+    +'<rect x="0" y="0" width="1920" height="1080" fill="#22322b"/>'
+    +'<rect width="1920" height="1080" filter="url(#grain)" opacity=".55"/>'
+    /* slate grain */
+    +'<rect width="1920" height="1080" fill="#1b2922" opacity=".35" filter="url(#grainSoft)"/>'
+    /* frame */
+    +'<g class="s4-frame">'
+      +'<rect x="26" y="26" width="1868" height="1028" fill="none" stroke="#8a5f31" stroke-width="52"/>'
+      +'<rect x="26" y="26" width="1868" height="1028" fill="none" stroke="#6d4a26" stroke-width="10"/>'
+      +'<rect x="52" y="52" width="1816" height="976" fill="none" stroke="#0f1a15" stroke-width="4"/>'
+    +'</g>'
+    /* tray */
+    +'<g class="tray">'
+      +'<rect x="60" y="1012" width="1800" height="34" fill="#7a5330"/>'
+      +'<rect x="60" y="1008" width="1800" height="8" fill="#9a6a3c"/>'
+      +'<rect x="120" y="992" width="70" height="16" rx="3" fill="#f2ede2"/>'
+      +'<rect x="204" y="992" width="60" height="16" rx="3" fill="#e8d9a0"/>'
+      +'<rect x="278" y="992" width="64" height="16" rx="3" fill="#e9834a"/>'
+      +'<rect x="1660" y="986" width="86" height="22" rx="4" fill="#4a3524"/>'
+      +'<rect x="1666" y="976" width="74" height="12" rx="3" fill="#6b5138"/>'
+    +'</g>'
+    /* painted grid */
+    +'<g class="s4-grid" opacity=".16">'
+      +'<path d="M668 60 V980 M1248 60 V980 M60 388 H1860 M60 700 H1860" stroke="#cfe3d6" stroke-width="1.6" stroke-dasharray="10 12"/>'
+    +'</g>'
+    /* the wrong drawing (child) + wipe layer */
+    +'<g id="s4-naive" class="chalky" filter="url(#chalkSoft)">'
+      +'<path class="chalk-y" d="M640 700 C640 640 700 610 760 616 C820 622 848 664 842 706 C836 744 790 760 744 752"/>'
+      +'<path class="chalk-y" d="M842 706 C900 700 936 704 962 716"/>'
+      +'<path class="chalk-y" d="M700 752 L688 800 M744 758 L748 802"/>'
+      +'<circle class="chalk-y" cx="774" cy="654" r="4"/>'
+      +'<text class="chalk-label" x="640" y="590">鹈鹕？</text>'
+    +'</g>'
+    +'<g id="s4-rider"></g>'
+    +'<g class="chalk-text" filter="url(#chalk)">'
+      +'<text class="chalk-cn" x="120" y="188">鹈 鹕</text>'
+      +'<text class="chalk-en" x="126" y="236">PELECANUS · 去灯塔</text>'
+      +'<path class="chalk-rule" d="M120 264 C220 258 320 262 420 258"/>'
+    +'</g>'
+    +'<g id="s4-eraser" style="display:none">'
+      +'<rect id="eraserRect" x="-200" y="60" width="240" height="960" fill="#c7d3c8" opacity=".16" filter="url(#blurBand)"/>'
+    +'</g>';
+  return g;
+}
+
+/* ============================================================
+   SCENE 5 — COPPERPLATE
+   ============================================================ */
+function buildS5(){
+  const g=document.createElementNS(NS,"g");
+  g.setAttribute("id","s5");
+  g.innerHTML=
+    '<rect width="1920" height="1080" fill="#f1e8d2"/>'
+    +'<rect width="1920" height="1080" filter="url(#grainSoft)" opacity=".55"/>'
+    /* sky hatch band */
+    +'<rect x="70" y="70" width="1780" height="470" fill="url(#hSky)" opacity=".30"/>'
+    /* landscape */
+    +'<g class="eng">'
+      +'<path d="M70 640 C260 560 420 556 560 610 C700 664 820 656 940 604 C1080 542 1240 546 1380 604 C1500 654 1620 650 1740 606 L1850 640 L1850 880 L70 880 Z" fill="none" stroke="#1c1510" stroke-width="2.6"/>'
+      +'<path d="M70 700 C260 620 420 616 560 670 C700 724 820 716 940 664 C1080 602 1240 606 1380 664 L1380 900 L70 900 Z" fill="url(#hA)" opacity=".55"/>'
+      +'<path d="M70 900 L1850 900" stroke="#1c1510" stroke-width="3"/>'
+      +'<path d="M70 912 L1850 912" stroke="#1c1510" stroke-width="1.2"/>'
+    +'</g>'
+    +'<g id="s5-rider"></g>'
+    /* roundel */
+    +'<g class="eng-roundel">'
+      +'<circle cx="1530" cy="330" r="214" fill="#f1e8d2" stroke="#1c1510" stroke-width="3.4"/>'
+      +'<circle cx="1530" cy="330" r="200" fill="none" stroke="#1c1510" stroke-width="1.1"/>'
+      +'<circle cx="1530" cy="330" r="214" fill="url(#hA)" opacity=".22"/>'
+      +'<circle cx="1530" cy="330" r="184" fill="#f1e8d2"/>'
+      +'<g clip-path="url(#roundelClip)"><g transform="translate(1530,330) scale(1.15) translate(-150,390)">'
+        +'<path class="eng-head" d="'+HEAD_D+'"/>'
+        +'<path class="eng-beak" d="'+BEAK_D+'"/>'
+        +'<path class="eng-pouch" d="'+POUCH_D+'"/>'
+        +'<circle cx="76" cy="-408" r="4.8" fill="#1c1510"/>'
+        +'<path class="eng-crest" d="M36 -420 C28 -436 18 -440 10 -438 M44 -426 C40 -442 32 -448 24 -449"/>'
+      +'</g></g>'
+    +'</g>'
+    +'<g class="eng-labels">'
+      +'<text class="eng-title" x="118" y="170">PELECANUS ONOCROTALUS</text>'
+      +'<text class="eng-sub" x="120" y="204">the letter-carrier, adult, plate XIV</text>'
+      +'<text class="eng-note" x="640" y="316">1 · gular pouch  喉囊</text>'
+      +'<path d="M800 332 L936 402" stroke="#1c1510" stroke-width="1" fill="none"/>'
+      +'<text class="eng-note" x="300" y="742">2 · webbed foot  蹼足</text>'
+      +'<path d="M690 748 L742 866" stroke="#1c1510" stroke-width="1" fill="none"/>'
+      +'<text class="eng-credit" x="120" y="1000">P. del. et sculp. — plate XIV</text>'
+    +'</g>'
+    /* eraser smudge trailing the reveal */
+    +'<path id="eraseSmudge" fill="none" stroke="#e9dcc0" stroke-width="34" opacity=".32" filter="url(#blurBand)"/>'
+    /* plate mark */
+    +'<path d="M62 62 H1858 V1018 H62 Z" fill="none" stroke="#cbb891" stroke-width="7"/>'
+    +'<rect x="70" y="70" width="1780" height="940" fill="none" stroke="#1c1510" stroke-width="1.4"/>'
+    +'<rect x="78" y="78" width="1764" height="924" fill="none" stroke="#1c1510" stroke-width=".5"/>';
+  return g;
+}
+
+/* ============================================================
+   SCENE 6 — ART DECO
+   ============================================================ */
+function buildS6(){
+  const g=document.createElementNS(NS,"g");
+  g.setAttribute("id","s6");
+  let rays="";
+  for(let i=0;i<44;i++){
+    const a=i*(360/44)*Math.PI/180;
+    rays+='<line x1="0" y1="0" x2="'+f1(1500*Math.cos(a))+'" y2="'+f1(1500*Math.sin(a))+'" stroke="url(#gold)" stroke-width="'+(i%3===0?2:0.9)+'" opacity="'+(i%2?.13:.24)+'"/>';
+  }
+  let bulbs="";
+  for(let i=0;i<15;i++){
+    const x=1000+i*46, y=300-Math.sin(i/14*Math.PI)*62;
+    bulbs+='<circle class="bulb" cx="'+x+'" cy="'+f1(y)+'" r="6" fill="#fff3c4" opacity="0"/>';
+  }
+  let towers="";
+  const tw=[[80,560,150,420],[250,640,190,340],[460,500,120,480],[600,700,160,280],[1540,600,170,380],[1730,520,190,460]];
+  tw.forEach(t=>{
+    towers+='<rect x="'+t[0]+'" y="'+t[1]+'" width="'+t[2]+'" height="'+t[3]+'" fill="#0e0b08" stroke="url(#gold)" stroke-width="2"/>';
+    for(let k=1;k<4;k++){
+      const w=t[2]*(1-k*0.2), x=t[0]+(t[2]-w)/2;
+      towers+='<rect x="'+x+'" y="'+(t[1]-k*26)+'" width="'+w+'" height="26" fill="#0e0b08" stroke="url(#gold)" stroke-width="1.6"/>';
+    }
+    for(let r=0;r<Math.floor(t[3]/54)-1;r++)
+      for(let c=0;c<Math.floor(t[2]/40);c++)
+        if((r+c)%3===0) towers+='<rect x="'+(t[0]+14+c*40)+'" y="'+(t[1]+26+r*54)+'" width="12" height="20" fill="#e8c477" opacity=".55"/>';
+  });
+  g.innerHTML=
+    '<rect width="1920" height="1080" fill="#14100c"/>'
+    +'<rect x="0" y="0" width="1920" height="1080" fill="#1a140e"/>'
+    +'<g transform="translate(1300,330)"><g class="sunrays">'+rays+'</g></g>'
+    +'<circle cx="1300" cy="330" r="300" fill="url(#lampGlow)"/>'
+    +'<g id="s6-city">'+towers+'</g>'
+    /* lighthouse under the arch, right of the rider's resting spot */
+    +'<g class="lighthouse">'
+      +'<path d="M1310 900 L1340 470 L1460 470 L1490 900 Z" fill="#1b1710" stroke="url(#gold)" stroke-width="3"/>'
+      +'<path d="M1326 760 H1474 M1320 830 H1480 M1334 620 H1466" stroke="url(#gold)" stroke-width="2" opacity=".8"/>'
+      +'<path d="M1336 470 L1464 470 L1464 430 L1336 430 Z" fill="#0e0b08" stroke="url(#gold)" stroke-width="2.6"/>'
+      +'<rect x="1356" y="400" width="88" height="30" fill="#0e0b08" stroke="url(#gold)" stroke-width="2.4"/>'
+      +'<circle cx="1400" cy="415" r="9" fill="#fff3c4"/>'
+      +'<path d="M1350 400 L1450 400 L1422 372 L1378 372 Z" fill="#0e0b08" stroke="url(#gold)" stroke-width="2.4"/>'
+      +'<path d="M1400 330 L1410 372 L1390 372 Z" fill="url(#gold)"/>'
+      +'<g class="beamG" transform="translate(1400,415)"><path d="M0 0 L980 -170 L980 170 Z" fill="#fff0bf" opacity=".07"/><path d="M0 0 L-980 -170 L-980 170 Z" fill="#fff0bf" opacity=".035"/></g>'
+    +'</g>'
+    /* marquee arch */
+    +'<g class="marquee">'
+      +'<path d="M960 900 C960 690 1180 640 1300 640 C1420 640 1640 690 1640 900" fill="none" stroke="url(#gold)" stroke-width="2.4"/>'
+      +'<path d="M960 900 C960 710 1180 662 1300 662 C1420 662 1640 710 1640 900" fill="none" stroke="url(#gold)" stroke-width="1" opacity=".65"/>'
+      +bulbs
+    +'</g>'
+    +'<rect x="0" y="900" width="1920" height="180" fill="#0e0b08"/>'
+    +'<path d="M0 900 H1920" stroke="url(#gold)" stroke-width="3"/>'
+    +'<path d="M0 914 H1920" stroke="url(#gold)" stroke-width="1"/>'
+    +'<g id="s6-rider"></g>'
+    /* title / end card */
+    +'<g id="s6-title" opacity="0">'
+      +'<rect x="0" y="0" width="1920" height="1080" fill="#0b0907" opacity=".82"/>'
+      +'<path d="M760 452 H1160 M740 470 H1180" stroke="url(#gold)" stroke-width="2"/>'
+      +'<text class="deco-title" x="960" y="590" text-anchor="middle">给灯塔的信</text>'
+      +'<text class="deco-sub" x="960" y="644" text-anchor="middle">A LETTER TO THE LIGHTHOUSE</text>'
+      +'<path d="M760 690 H1160" stroke="url(#gold)" stroke-width="1.4"/>'
+      +'<text class="deco-cred" x="960" y="740" text-anchor="middle">一笔画 · 水彩 · 孔版印刷 · 黑板粉笔 · 铜版画 · 装饰艺术</text>'
+      +'<text class="deco-model" x="960" y="784" text-anchor="middle">画面与代码 · DeepSeek-V4.1-Flash</text>'
+    +'</g>'
+    +'<rect width="1920" height="1080" fill="none"/>';
+  return g;
+}
+
+/* ============================================================
+   ASSEMBLE
+   ============================================================ */
+const host=document.getElementById("scenes");
+const S={};
+function mount(key,builder){
+  const g=builder();
+  host.appendChild(g);
+  S[key]=g;
+}
+mount("s1",buildS1);
+mount("s2",buildS2);
+mount("s3",buildS3);
+mount("s4",buildS4);
+mount("s5",buildS5);
+mount("s6",buildS6);
+
+/* riders */
+const riders={};
+function attachRider(key,mode){
+  const r=makeRider(mode,key);
+  S[key].querySelector("#"+key+"-rider").appendChild(r.node);
+  riders[key]=r;
+  return r;
+}
+attachRider("s1","line");
+attachRider("s2","wc");
+attachRider("s3","riso");
+attachRider("s4","chalk");
+attachRider("s5","eng");
+attachRider("s6","deco");
+
+/* ============================================================
+   STYLE SHEETS PER SCENE (applied to the shared geometry)
+   ============================================================ */
+const css=document.createElement("style");
+css.textContent=`
+/* ---------- 01 one-line ---------- */
+#s1 .ol-line{fill:none;stroke:#1D1A17;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+#s1 .ol-title{font-family:"Songti SC","STSong","Times New Roman",serif;font-size:58px;fill:#1D1A17;letter-spacing:.14em}
+#s1 .ol-sub{font-family:"Bradley Hand","Snell Roundhand",ui-monospace,"SF Mono",Menlo,monospace;font-size:16px;fill:#1D1A17;opacity:.62;letter-spacing:.14em}
+#s1 .ol-cap{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:14px;fill:#1D1A17;opacity:.5;letter-spacing:.16em}
+#s1 .pr-body,#s1 .pr-tail,#s1 .pr-head,#s1 .pr-beak,#s1 .pr-pouch,#s1 .pr-wing,#s1 .pr-basket,
+#s1 .pr-neck,#s1 .pr-legA,#s1 .pr-legB,#s1 .pr-frame,#s1 .pr-bar,#s1 .pr-saddle,#s1 .pr-crank,
+#s1 .pr-footA,#s1 .pr-footB,#s1 .pr-crest,#s1 .pr-wicker path,#s1 .pr-pedal{
+  fill:none;stroke:#1D1A17;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+#s1 .pr-tire{fill:none;stroke:#1D1A17;stroke-width:3.8}
+#s1 .pr-rim{fill:none;stroke:#1D1A17;stroke-width:2}
+#s1 .spoke{stroke:#1D1A17;stroke-width:1.5}
+#s1 .pr-hub,#s1 .pr-eye{fill:#1D1A17;stroke:none}
+#s1 .pr-letter{fill:none;stroke:#C8442A;stroke-width:4}
+#s1 .pr-letterSeam{fill:none;stroke:#C8442A;stroke-width:3}
+#s1 .pr-scarf{fill:none;stroke:#1D1A17;stroke-width:3.2;stroke-linecap:round}
+
+/* ---------- 02 watercolour ---------- */
+#s2 .wc-note{font-family:"Bradley Hand","Snell Roundhand","Songti SC",cursive;font-size:34px;fill:#6b5a44}
+#s2 .wc-note2{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:14px;fill:#7a6a55;letter-spacing:.12em}
+#s2 .wc-cap{font-family:"Cormorant Garamond",Georgia,"Songti SC",serif;font-size:16px;fill:#5f5140;letter-spacing:.16em}
+#s2 .pr-body{fill:#f0e6cf;stroke:#dbcdaa;stroke-width:1.4}
+#s2 .pr-tail{fill:#e3d6ba}
+#s2 .pr-head{fill:#f0e6cf;stroke:#dbcdaa;stroke-width:1.4}
+#s2 .pr-neck{fill:#f0e6cf;stroke:none}
+#s2 .pr-beak{fill:#d99a4e}
+#s2 .pr-pouch{fill:#e8b46b;stroke:#b3732e;stroke-width:2;opacity:.95}
+#s2 .pr-crest{fill:none;stroke:#c9b795;stroke-width:3}
+#s2 .pr-eye{fill:#3c3226}
+#s2 .pr-wing{fill:#dfd2b6;stroke:#c9b795;stroke-width:1.8}
+#s2 .pr-scarf{fill:#b4573f;stroke:none;opacity:.92}
+#s2 .pr-legA,#s2 .pr-legB{fill:none;stroke:#b07a37;stroke-width:5.5;stroke-linecap:round;stroke-linejoin:round}
+#s2 .pr-footA,#s2 .pr-footB{fill:#b07a37}
+#s2 .pr-frame,#s2 .pr-bar,#s2 .pr-saddle,#s2 .pr-crank{fill:none;stroke:#5f7486;stroke-width:7;stroke-linecap:round}
+#s2 .pr-tire{fill:none;stroke:#4c5f6e;stroke-width:8}
+#s2 .pr-rim{fill:none;stroke:#7d95a8;stroke-width:3.4}
+#s2 .spoke{stroke:#7d95a8;stroke-width:2}
+#s2 .pr-hub{fill:#4c5f6e}
+#s2 .pr-pedal{fill:#4c5f6e}
+#s2 .pr-basket{fill:#c9a06a;opacity:.85}
+#s2 .pr-wicker path{fill:none;stroke:#8d6a3d;stroke-width:2.6;opacity:.8}
+#s2 .pr-letter{fill:#c8442a}
+#s2 .pr-letterSeam{fill:none;stroke:#8f2f1c;stroke-width:2}
+#s2 .rider{filter:url(#wcEdge)}
+
+/* ---------- 03 risograph ---------- */
+#s3 .riso-cn{font-family:"Bricolage Grotesque","Helvetica Neue",Arial,"PingFang SC",sans-serif;font-weight:800;font-size:76px;fill:#00838A}
+#s3 .riso-en{font-family:"Jost","Futura","Avenir Next",sans-serif;font-weight:600;font-size:26px;fill:#FF7477;letter-spacing:.2em}
+#s3 .riso-cap{font-family:"Jost","Futura","Avenir Next",sans-serif;font-weight:600;font-size:15px;fill:#F4EEE2;letter-spacing:.18em;opacity:.85}
+#s3 .rider{filter:drop-shadow(3px 0 0 rgba(255,116,119,.55)) drop-shadow(-3px 0 0 rgba(0,131,138,.5))}
+#s3 .pr-body{fill:#F4EEE2;stroke:#F4EEE2;stroke-width:12;paint-order:stroke}
+#s3 .pr-head{fill:#F4EEE2;stroke:#F4EEE2;stroke-width:12;paint-order:stroke}
+#s3 .pr-neck{fill:#F4EEE2;stroke:#00838A;stroke-width:3;paint-order:stroke}
+#s3 .pr-tail{fill:#00838A}
+#s3 .pr-beak{fill:#FF7477}
+#s3 .pr-pouch{fill:#FF7477;opacity:.85}
+#s3 .pr-crest{fill:none;stroke:#00838A;stroke-width:3}
+#s3 .pr-eye{fill:#00838A}
+#s3 .pr-wing{fill:#00838A;opacity:.9}
+#s3 .pr-scarf{fill:#FF7477;stroke:none}
+#s3 .pr-legA,#s3 .pr-legB{fill:none;stroke:#F4EEE2;stroke-width:8;stroke-linecap:round;stroke-linejoin:round}
+#s3 .pr-footA,#s3 .pr-footB{fill:#F4EEE2}
+#s3 .pr-frame,#s3 .pr-bar,#s3 .pr-saddle,#s3 .pr-crank{fill:none;stroke:#F4EEE2;stroke-width:8;stroke-linecap:round}
+#s3 .pr-tire{fill:none;stroke:#00838A;stroke-width:9}
+#s3 .pr-rim{fill:none;stroke:#F4EEE2;stroke-width:3.2}
+#s3 .spoke{stroke:#F4EEE2;stroke-width:2.2}
+#s3 .pr-hub{fill:#FF7477}
+#s3 .pr-pedal{fill:#FF7477}
+#s3 .pr-basket{fill:#FF7477;opacity:.55}
+#s3 .pr-wicker path{fill:none;stroke:#00838A;stroke-width:3}
+#s3 .pr-letter{fill:#FF7477}
+#s3 .pr-letterSeam{fill:none;stroke:#00838A;stroke-width:2.4}
+
+/* ---------- 04 chalkboard ---------- */
+#s4 .chalk-cn{font-family:"Hiragino Sans GB","PingFang SC","STHeiti",sans-serif;font-weight:300;font-size:72px;fill:#f2ede2;letter-spacing:.1em}
+#s4 .chalk-en{font-family:"Hiragino Sans GB","PingFang SC",sans-serif;font-weight:300;font-size:26px;fill:#e8d9a0;letter-spacing:.12em}
+#s4 .chalk-rule{fill:none;stroke:#f2ede2;stroke-width:3;opacity:.7}
+#s4 .chalk-label{font-family:"Hiragino Sans GB","PingFang SC",sans-serif;font-size:44px;fill:#e8d9a0;opacity:.9}
+#s4 .chalk-y{fill:none;stroke:#e8d9a0;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+#s4 .chalk-cap{font-family:"Hiragino Sans GB","PingFang SC",sans-serif;font-size:15px;fill:#cfe3d6;opacity:.5;letter-spacing:.14em}
+#s4 .rider{filter:url(#chalk)}
+#s4 .pr-body,#s4 .pr-tail,#s4 .pr-head,#s4 .pr-beak,#s4 .pr-pouch,#s4 .pr-wing,#s4 .pr-basket,
+#s4 .pr-neck,#s4 .pr-legA,#s4 .pr-legB,#s4 .pr-frame,#s4 .pr-bar,#s4 .pr-saddle,#s4 .pr-crank,
+#s4 .pr-footA,#s4 .pr-footB,#s4 .pr-crest,#s4 .pr-wicker path,#s4 .pr-pedal{
+  fill:none;stroke:#f2ede2;stroke-width:4.4;stroke-linecap:round;stroke-linejoin:round;opacity:.94}
+#s4 .pr-tire{fill:none;stroke:#f2ede2;stroke-width:5}
+#s4 .pr-rim{fill:none;stroke:#f2ede2;stroke-width:2.6;opacity:.8}
+#s4 .spoke{stroke:#f2ede2;stroke-width:2;opacity:.75}
+#s4 .pr-hub,#s4 .pr-eye{fill:#f2ede2;stroke:none}
+#s4 .pr-letter{fill:none;stroke:#e9834a;stroke-width:5}
+#s4 .pr-letterSeam{fill:none;stroke:#e9834a;stroke-width:3.4}
+#s4 .pr-scarf{fill:none;stroke:#f2ede2;stroke-width:5;stroke-linecap:round;opacity:.85}
+
+/* ---------- 05 engraving ---------- */
+#s5 .eng-head{fill:#f1e8d2;stroke:#1c1510;stroke-width:2.4}
+#s5 .eng-beak{fill:#f1e8d2;stroke:#1c1510;stroke-width:2.2}
+#s5 .eng-pouch{fill:url(#hA);stroke:#1c1510;stroke-width:2.2;opacity:.9}
+#s5 .eng-crest{fill:none;stroke:#1c1510;stroke-width:2}
+#s5 .eng-title{font-family:"Bodoni 72","Bodoni Moda","Didot","Times New Roman",serif;font-size:50px;fill:#1c1510;letter-spacing:.09em}
+#s5 .eng-sub{font-family:"Bodoni 72","Didot",serif;font-style:italic;font-size:24px;fill:#1c1510}
+#s5 .eng-note{font-family:"Snell Roundhand","Bodoni 72",cursive;font-size:34px;fill:#1c1510}
+#s5 .eng-num{font-family:"Bodoni 72","Didot",serif;font-style:italic;font-size:22px;fill:#1c1510}
+#s5 .eng-credit{font-family:"Bodoni 72","Didot",serif;font-size:15px;fill:#1c1510;letter-spacing:.14em}
+#s5 .eng-credit2{font-family:"Songti SC","STSong",serif;font-size:14px;fill:#5c4f3c;letter-spacing:.06em}
+#s5 .pr-body,#s5 .pr-tail,#s5 .pr-head,#s5 .pr-beak,#s5 .pr-pouch,#s5 .pr-wing,#s5 .pr-basket,
+#s5 .pr-frame,#s5 .pr-bar,#s5 .pr-saddle{fill:#f1e8d2;stroke:#1c1510;stroke-width:2.6;stroke-linejoin:round}
+#s5 .pr-neck{fill:#f1e8d2;stroke:#1c1510;stroke-width:2.6}
+#s5 .pr-neckO{fill:none;stroke:#1c1510;stroke-width:2.2}
+#s5 .pr-crest{fill:none;stroke:#1c1510;stroke-width:2}
+#s5 .pr-eye{fill:#1c1510}
+#s5 .pr-scarf{fill:#e6d9bd;stroke:#1c1510;stroke-width:1.6}
+#s5 .pr-legA,#s5 .pr-legB{fill:none;stroke:#1c1510;stroke-width:4.2;stroke-linecap:round}
+#s5 .pr-footA,#s5 .pr-footB{fill:#f1e8d2;stroke:#1c1510;stroke-width:2.2}
+#s5 .pr-frame,#s5 .pr-bar,#s5 .pr-saddle,#s5 .pr-crank{stroke-width:5}
+#s5 .pr-tire{fill:none;stroke:#1c1510;stroke-width:6}
+#s5 .pr-rim{fill:none;stroke:#1c1510;stroke-width:2.4}
+#s5 .spoke{stroke:#1c1510;stroke-width:1.3}
+#s5 .pr-hub{fill:#1c1510}
+#s5 .pr-pedal{fill:#1c1510}
+#s5 .pr-wicker path{fill:none;stroke:#1c1510;stroke-width:1.6}
+#s5 .pr-letter{fill:#a33a4a}
+#s5 .pr-letterSeam{fill:none;stroke:#1c1510;stroke-width:1.8}
+#s5 .pr-hatch{fill:url(#hA);opacity:.5}
+#s5 .pr-hatch2{fill:url(#hB);opacity:.34}
+
+/* ---------- 06 art deco ---------- */
+#s6 .deco-title{font-family:"Limelight","Poiret One","Futura","Avenir Next",sans-serif;font-size:86px;fill:url(#gold);letter-spacing:.14em}
+#s6 .deco-sub{font-family:"Josefin Sans","Futura","Avenir Next",sans-serif;font-weight:300;font-size:24px;fill:#F2E9D8;letter-spacing:.36em}
+#s6 .deco-cred{font-family:"Josefin Sans","Futura","PingFang SC",sans-serif;font-size:16px;fill:#c9b48a;letter-spacing:.18em}
+#s6 .deco-model{font-family:"Futura","Avenir Next","PingFang SC",sans-serif;font-size:15px;fill:#bda87e;letter-spacing:.2em}
+#s6 .deco-cap{font-family:"Josefin Sans","Futura","Avenir Next",sans-serif;font-size:14px;fill:#c9a227;letter-spacing:.2em;opacity:.7}
+#s6 .pr-body{fill:url(#airBody);stroke:url(#gold);stroke-width:3;paint-order:stroke}
+#s6 .pr-head{fill:url(#airBody);stroke:url(#gold);stroke-width:3;paint-order:stroke}
+#s6 .pr-neck{fill:#e9dcc2;stroke:url(#gold);stroke-width:3}
+#s6 .pr-neckO{fill:none;stroke:url(#gold);stroke-width:2.4}
+#s6 .pr-tail{fill:#d9c8a6;stroke:url(#gold);stroke-width:2.4}
+#s6 .pr-beak{fill:url(#airBeak);stroke:url(#gold);stroke-width:2.6}
+#s6 .pr-pouch{fill:#c9922f;stroke:url(#gold);stroke-width:2.2;opacity:.95}
+#s6 .pr-crest{fill:none;stroke:url(#gold);stroke-width:2.6}
+#s6 .pr-eye{fill:#14100c}
+#s6 .pr-wing{fill:#cdbb98;stroke:url(#gold);stroke-width:2.4}
+#s6 .pr-scarf{fill:#8C2233;stroke:url(#gold);stroke-width:1.8}
+#s6 .pr-legA,#s6 .pr-legB{fill:none;stroke:url(#gold);stroke-width:6;stroke-linecap:round}
+#s6 .pr-footA,#s6 .pr-footB{fill:#c9922f;stroke:url(#gold);stroke-width:1.6}
+#s6 .pr-frame,#s6 .pr-bar,#s6 .pr-saddle,#s6 .pr-crank{fill:none;stroke:url(#gold);stroke-width:6;stroke-linecap:round}
+#s6 .pr-tire{fill:none;stroke:url(#gold);stroke-width:7}
+#s6 .pr-rim{fill:none;stroke:#f0d9a0;stroke-width:2.6;opacity:.85}
+#s6 .spoke{stroke:#e8c477;stroke-width:1.6;opacity:.75}
+#s6 .pr-hub{fill:#f0d9a0}
+#s6 .pr-pedal{fill:#d9a441}
+#s6 .pr-basket{fill:#2a1f12;stroke:url(#gold);stroke-width:2.4}
+#s6 .pr-wicker path{fill:none;stroke:url(#gold);stroke-width:1.6;opacity:.85}
+#s6 .pr-letter{fill:#8C2233;stroke:url(#gold);stroke-width:2}
+#s6 .pr-letterSeam{fill:none;stroke:#e8c477;stroke-width:1.6}
+#s6 .rider{filter:drop-shadow(0 0 24px rgba(217,164,65,.25))}
+
+/* shared detail strokes */
+.pr-cheek{fill:none;stroke:#c3b391;stroke-width:3;stroke-linecap:round}
+.pr-feather{fill:none;stroke:#c3b391;stroke-width:2.4;stroke-linecap:round;opacity:.85}
+#s1 .pr-cheek,#s1 .pr-feather{stroke:#1D1A17;stroke-width:3.2;opacity:1}
+#s2 .pr-cheek{stroke:#c9b795}
+#s2 .pr-feather{stroke:#c2b08a;opacity:.9}
+#s3 .pr-cheek,#s3 .pr-feather{stroke:#00838A;stroke-width:3.4;opacity:1}
+#s4 .pr-cheek,#s4 .pr-feather{stroke:#f2ede2;stroke-width:4;opacity:.9}
+#s5 .pr-cheek,#s5 .pr-feather{stroke:#1c1510;stroke-width:1.8;opacity:1}
+#s6 .pr-cheek,#s6 .pr-feather{stroke:url(#gold);stroke-width:2.4;opacity:1}
+`;
+document.head.appendChild(css);
+
+/* neck outline helper for eng/deco */
+/* engraving hatching inside the bird */
+(function(){
+  const grp=S.s5.querySelector(".rider");
+  const clip=document.createElementNS(NS,"clipPath");
+  clip.setAttribute("id","s5clip");
+  [".pr-body",".pr-head",".pr-pouch",".pr-wing",".pr-tail"].forEach(sel=>{
+    const p=S.s5.querySelector(sel);
+    if(p) clip.appendChild(p.cloneNode());
+  });
+  S.s5.querySelector("defs")||document.querySelector("#stage defs").appendChild(clip);
+  const h=document.createElementNS(NS,"path");
+  h.setAttribute("class","pr-hatch");
+  h.setAttribute("clip-path","url(#s5clip)");
+  h.setAttribute("d",BODY_D);
+  h.setAttribute("fill","url(#hA)");
+  h.setAttribute("opacity",".5");
+  const h2=document.createElementNS(NS,"rect");
+  h2.setAttribute("x","-400");h2.setAttribute("y","-460");
+  h2.setAttribute("width","700");h2.setAttribute("height","560");
+  h2.setAttribute("fill","url(#hB)");
+  h2.setAttribute("opacity",".22");
+  h2.setAttribute("clip-path","url(#s5clip)");
+  grp.appendChild(h);grp.appendChild(h2);
+})();
+
+/* ============================================================
+   ANIMATION STATE PER SCENE
+   ============================================================ */
+const R1=riders.s1, R2=riders.s2, R3=riders.s3, R4=riders.s4, R5=riders.s5, R6=riders.s6;
+
+/* draw-on helper */
+function drawOn(el,start,dur,lt){
+  const u=clamp((lt-start)/dur,0,1);
+  if(!el) return;
+  el.setAttribute("pathLength","1");
+  if(u<=0){el.setAttribute("stroke-dasharray","1 1");el.setAttribute("stroke-dashoffset","1");el.style.opacity="0";}
+  else if(u>=1){el.removeAttribute("stroke-dasharray");el.removeAttribute("stroke-dashoffset");el.style.opacity="";}
+  else{
+    el.setAttribute("pathLength","1");
+    el.setAttribute("stroke-dasharray","1 1");
+    el.setAttribute("stroke-dashoffset",String(1-u));
+    el.style.opacity="";
+  }
+}
+
+/* ============================================================
+   MAIN RENDER
+   ============================================================ */
+function render(t){
+  /* ---------- scene 1 ---------- */
+  if(t>=0 && t<18.5){
+    const lt=t;
+    const lines=S.s1.querySelectorAll(".ol-line");
+    lines.forEach((el,i)=>{
+      drawOn(el,0.0+i*0.28,1.2,lt);
+    });
+    /* rider draw-on — ordered like one hand travelling over the paper */
+    const startFor=(el)=>{
+      const c=(el.getAttribute("class")||"")+(el.parentNode&&el.parentNode.getAttribute?(" "+el.parentNode.getAttribute("class")):"");
+      if(/pr-tire|pr-rim|spoke|pr-hub/.test(c)) return 4.2;
+      if(/pr-frame|pr-bar|pr-saddle|pr-crank|pr-pedal/.test(c)) return 5.0;
+      if(/pr-body|pr-tail|pr-wing/.test(c)) return 5.8;
+      if(/pr-neck|pr-head/.test(c)) return 6.6;
+      if(/pr-beak|pr-pouch|pr-eye|pr-crest/.test(c)) return 7.2;
+      if(/pr-leg|pr-foot/.test(c)) return 7.7;
+      if(/pr-basket|pr-wicker/.test(c)) return 8.0;
+      if(/pr-letter/.test(c)) return 8.6;
+      return 5.8;
+    };
+    const parts=S.s1.querySelectorAll("#s1-rider path, #s1-rider circle, #s1-rider line, #s1-rider rect");
+    parts.forEach((el)=>{
+      const start=startFor(el);
+      if(el.tagName==="line"){ const u=clamp((lt-start)/.5,0,1); el.style.opacity=u; }
+      else drawOn(el,start,/pr-letter/.test(el.getAttribute("class")||"")?1.1:.75,lt);
+    });
+    const rideStart=9.6;
+    R1.update(Math.max(0,lt-rideStart),2.6,7);
+    /* body bob */
+    const bob=Math.sin((lt-rideStart)*5.2)*2.2;
+    R1.node.setAttribute("transform","translate("+RX+","+(RY+bob)+") scale("+RS+")");
+    /* title */
+    document.getElementById("s1titleClip").setAttribute("width",String(clamp((lt-1.0)/2.4,0,1)*1100));
+    S.s1.style.display="";
+  } else if(t>=18.5) S.s1.style.display="none";
+  else S.s1.style.display="none";
+
+  /* ---------- scene 2 ---------- */
+  if(t>=15.0 && t<=35.0){
+    const lt=t-16.0;
+    S.s2.style.display="";
+    R2.update(Math.max(0,lt)+6,2.5,9);
+    const bob=Math.sin((lt+6)*5.1)*2.4;
+    R2.node.setAttribute("transform","translate("+RX+","+(RY+bob)+") scale("+RS+")");
+    /* camera: slow lateral dolly */
+    const pan=-eio(clamp((lt+1.0)/19,0,1))*150;
+    S.s2.querySelector(".wc").setAttribute("transform","translate("+f1(pan)+",0)");
+    S.s2.querySelectorAll(".wc").forEach((n,i)=>n.setAttribute("transform","translate("+f1(pan*(1-i*0.02))+",0)"));
+    /* wipe in */
+    const a=15.0,b=17.0;
+    const u=clamp((t-a)/(b-a),0,1);
+    const x=-80+eio(u)*(2060);
+    document.getElementById("s2wipePath").setAttribute("d",
+      "M -40 -40 H "+f1(x)+" L "+f1(x+22)+" 160 L "+f1(x-16)+" 340 L "+f1(x+24)+" 520 L "+f1(x-18)+" 700 L "+f1(x+18)+" 880 L "+f1(x-10)+" 1120 H -40 Z");
+    /* wet edge just inside the boundary */
+    const edgeD="M "+f1(x-12)+" -40 L "+f1(x+10)+" 160 L "+f1(x-28)+" 340 L "+f1(x+12)+" 520 L "+f1(x-30)+" 700 L "+f1(x+6)+" 880 L "+f1(x-22)+" 1120";
+    document.getElementById("wetEdgeCream").setAttribute("d",edgeD);
+    document.getElementById("wetEdgeInk").setAttribute("d",edgeD);
+    S.s2.setAttribute("clip-path",u<1?"url(#clipS2)":"");
+  } else S.s2.style.display="none";
+
+  /* ---------- scene 3 ---------- */
+  if(t>=32.0 && t<=52.0){
+    const lt=t-33.5;
+    S.s3.style.display="";
+    R3.update(Math.max(0,lt)+11,2.55,8);
+    const bob=Math.sin((lt+11)*5.3)*2;
+    R3.node.setAttribute("transform","translate("+RX+","+(RY+bob)+") scale("+RS+")");
+    /* parallax pan */
+    const pan=-eio(clamp((lt+1.4)/18.5,0,1))*260;
+    const far=S.s3.querySelector("#s3-city");
+    far.setAttribute("transform","translate("+f1(pan*0.35)+",-100)");
+    S.s3.querySelectorAll(":scope > rect").forEach(()=>{});
+    /* roller intro */
+    const a=33.0,b=34.6,u=clamp((t-a)/(b-a),0,1);
+    const x=-140+eio(u)*2200;
+    document.getElementById("s3wipePath").setAttribute("d",
+      "M -40 -40 H "+f1(x)+" L "+f1(x+18)+" 200 L "+f1(x-14)+" 420 L "+f1(x+16)+" 640 L "+f1(x-12)+" 860 L "+f1(x+10)+" 1120 H -40 Z");
+    S.s3.setAttribute("clip-path",u<1?"url(#clipS3)":"");
+    /* the roller runs ahead of the ink edge */
+    const band=document.getElementById("rollerBand"), core=document.getElementById("rollerCore");
+    if(u>0&&u<1){
+      band.style.display=""; core.style.display="";
+      band.setAttribute("x",String(f1(x+30)));
+      core.setAttribute("x",String(f1(x+84)));
+    } else { band.style.display="none"; core.style.display="none"; }
+    /* registration kick at 40.0 */
+    const kick=Math.max(0,1-Math.abs(t-40.3)/0.42);
+    const k=Math.sin(kick*Math.PI)*10;
+    R3.node.setAttribute("transform","translate("+(RX+k)+","+(RY+bob-k*0.3)+") scale("+RS+")");
+  } else S.s3.style.display="none";
+
+  /* ---------- scene 4 ---------- */
+  if(t>=49.0 && t<=70.0){
+    const lt=t-50.5;
+    S.s4.style.display="";
+    /* panel slide in */
+    const a=49.7,b=51.4,u=clamp((t-a)/(b-a),0,1);
+    const px=(1-eio(u))*1980;
+    S.s4.setAttribute("transform","translate("+f1(px)+",0)");
+    /* naive drawing draws in then gets wiped */
+    const naive=S.s4.querySelector("#s4-naive");
+    const nu=clamp((lt-1.2)/2.6,0,1);
+    naive.style.opacity=nu>0?1:0;
+    naive.querySelectorAll(".chalk-y").forEach((el,i)=>{
+      el.setAttribute("pathLength","1");
+      el.setAttribute("stroke-dasharray","1 1");
+      el.setAttribute("stroke-dashoffset",String(1-clamp((nu-i*0.18)/0.45,0,1)));
+    });
+    const wipeT=clamp((lt-4.1)/1.0,0,1);
+    const eraser=S.s4.querySelector("#s4-eraser");
+    if(wipeT>0&&wipeT<1){
+      eraser.style.display="";
+      document.getElementById("eraserRect").setAttribute("x",String(f1(-260+eio(wipeT)*1400)));
+      naive.style.opacity=String(1-wipeT);
+    } else {eraser.style.display="none"; if(wipeT>=1) naive.style.opacity=0;}
+    /* the real pelican rides across the board */
+    const rideOn=clamp((lt-5.3)/2.2,0,1);
+    R4.node.style.display=rideOn>0?"":"none";
+    R4.node.querySelectorAll("path,circle,line,rect").forEach((el,i)=>{
+      if(el.classList.contains("pr-wicker")) return;
+      const d=clamp((rideOn*1.6)-i*0.012,0,1);
+      if(el.tagName==="line"){el.style.opacity=String(d*0.7);}
+      else{
+        el.setAttribute("pathLength","1");
+        el.setAttribute("stroke-dasharray","1 1");
+        el.setAttribute("stroke-dashoffset",String(1-d));
+      }
+    });
+    R4.update(Math.max(0,lt-7.4),2.7,7);
+    const bob=Math.sin((lt-7.4)*5.2)*2.2;
+    R4.node.setAttribute("transform","translate("+RX+","+(RY+bob)+") scale("+RS+")");
+    /* camera pan across the board */
+    const pan=-eio(clamp((lt-6)/12,0,1))*180;
+    S.s4.querySelector(".s4-grid").setAttribute("transform","translate("+f1(pan)+",0)");
+  } else S.s4.style.display="none";
+
+  /* ---------- scene 5 ---------- */
+  if(t>=66.0 && t<=87.5){
+    const lt=t-68.0;
+    S.s5.style.display="";
+    /* eraser wipe revealing the plate */
+    const a=67.0,b=69.6,u=clamp((t-a)/(b-a),0,1);
+    const x=-160+u*2200;
+    document.getElementById("s5wipePath").setAttribute("d",
+      "M -40 -40 H "+f1(x)+" Q "+f1(x+30)+" 240 "+f1(x)+" 520 Q "+f1(x-26)+" 800 "+f1(x+8)+" 1120 H -40 Z");
+    S.s5.setAttribute("clip-path",u<1?"url(#clipS5)":"");
+    /* chalk dust smeared just behind the eraser */
+    const smudge=document.getElementById("eraseSmudge");
+    if(u>0&&u<1){
+      smudge.style.display="";
+      smudge.setAttribute("d","M "+f1(x-78)+" -40 Q "+f1(x-44)+" 240 "+f1(x-78)+" 520 Q "+f1(x-112)+" 800 "+f1(x-70)+" 1120");
+    } else smudge.style.display="none";
+    /* build order: outline → hatch sweep → wash */
+    const bu=clamp((lt-0.6)/3.4,0,1);
+    S.s5.querySelectorAll(".eng path, .eng-head, .eng-beak, .eng-pouch, .eng-crest").forEach((el,i)=>{
+      el.setAttribute("pathLength","1");
+      el.setAttribute("stroke-dasharray","1 1");
+      el.setAttribute("stroke-dashoffset",String(1-clamp(bu*1.7-i*0.05,0,1)));
+    });
+    const h=clamp((lt-3.2)/2.4,0,1);
+    S.s5.querySelectorAll(".pr-hatch").forEach(el=>el.setAttribute("opacity",String(0.5*h)));
+    /* the wash blooms on the letter */
+    const wu=clamp((lt-10.0)/2.0,0,1);
+    R5.node.querySelector(".pr-letter").setAttribute("opacity",String(0.25+0.75*wu));
+    R5.update(Math.max(0,lt)+16,2.45,8);
+    const bob=Math.sin((lt+16)*5.0)*2.1;
+    R5.node.setAttribute("transform","translate("+RX+","+(RY+bob)+") scale("+RS+")");
+    /* slow loupe push then hold */
+    const push=sm(0,4,lt)*0.0;
+    S.s5.querySelectorAll(".eng-roundel").forEach(n=>{
+      const u2=clamp((lt-4.0)/1.6,0,1);
+      n.setAttribute("opacity",String(u2));
+      n.setAttribute("transform","translate(0,"+f1((1-eo(u2))*30)+")");
+    });
+    S.s5.setAttribute("transform","");
+  } else S.s5.style.display="none";
+
+  /* ---------- scene 6 ---------- */
+  if(t>=84.0){
+    const lt=t-85.5;
+    S.s6.style.display="";
+    /* iris */
+    const a=84.4,b=87.0,u=clamp((t-a)/(b-a),0,1);
+    const r=Math.pow(u,1.35)*1800;
+    document.getElementById("s6iris").setAttribute("r",String(f1(r)));
+    S.s6.setAttribute("clip-path",u<1?"url(#clipS6)":"");
+    /* bulbs */
+    const b0=1.6;
+    S.s6.querySelectorAll(".bulb").forEach((el,i)=>{
+      const on=clamp((lt-(b0+i*0.075))/0.22,0,1);
+      el.setAttribute("opacity",String(eo(on)));
+      const sc=on<1?1+0.9*(1-on):1;
+      el.setAttribute("r",String(f1(6*sc)));
+    });
+    /* beam sweep */
+    const beam=S.s6.querySelector(".beamG");
+    beam.setAttribute("transform","translate(1030,415) rotate("+f1(Math.sin((lt-4)*0.55)*16)+")");
+    const rays=S.s6.querySelector(".sunrays");
+    rays.setAttribute("transform","rotate("+f1(lt*1.6)+")");
+    /* rider approaches and stops at the door */
+    const rideT=Math.max(0,lt);
+    R6.update(rideT,2.4,7);
+    const arrive=clamp((lt-3.5)/7.0,0,1);
+    const rx=lerp(RX,1010,eo(arrive));
+    const bob=Math.sin(rideT*5.0)*2.0*(1-arrive*0.8);
+    R6.node.setAttribute("transform","translate("+f1(rx)+","+(RY+bob)+") scale("+RS+")");
+    /* letter leaves the basket */
+    const lu=clamp((lt-11.6)/1.8,0,1);
+    const lg=R6.letter;
+    if(lu>0){
+      lg.setAttribute("transform","translate("+f1(150+lu*150)+","+f1(-282-lu*145)+") rotate("+f1(-7-lu*180)+") scale("+f1(1-lu*0.55)+")");
+      lg.setAttribute("opacity",String(1-lu*0.85));
+    } else {lg.setAttribute("transform","translate(150,-282) rotate(-7)");lg.setAttribute("opacity","1");}
+    /* end card */
+    const cu=clamp((lt-14.2)/1.4,0,1);
+    const card=S.s6.querySelector("#s6-title");
+    card.setAttribute("opacity",String(cu));
+    R6.node.setAttribute("opacity",String(1-cu*0.82));
+  } else S.s6.style.display="none";
+
+  updateHUD(t);
+}
+
+/* HUD */
+const fillEl=document.getElementById("fill");
+const knobEl=document.getElementById("knob");
+const chapEl=document.getElementById("chap");
+const tcEl=document.getElementById("tc");
+const barEl=document.getElementById("bar");
+const hud=document.getElementById("hud");
+SEG.forEach(s=>{
+  const d=document.createElement("div");
+  d.className="tick";
+  d.style.left=(s.t0/TOTAL*100)+"%";
+  barEl.appendChild(d);
+});
+const fmt=s=>pad2(Math.floor(s/60+1e-6))+":"+pad2(Math.floor(s%60+1e-6));
+function updateHUD(t){
+  const p=clamp(t/TOTAL,0,1);
+  fillEl.style.width=(p*100)+"%";
+  knobEl.style.left=(p*100)+"%";
+  let idx=0;
+  for(let i=0;i<SEG.length;i++) if(t>=SEG[i].t0) idx=i;
+  chapEl.textContent=pad2(idx+1)+" · "+SEG[idx].cn+" / "+SEG[idx].en;
+  tcEl.textContent=fmt(t)+" / "+fmt(TOTAL);
+  hud.classList.toggle("on-dark", (t>=33.5 && t<68.0) || t>=85.4);
+}
+
+/* ============================================================
+   CLOCK
+   ============================================================ */
+const qs=new URLSearchParams(location.search);
+const state={t: qs.has("t")?clamp(parseFloat(qs.get("t"))||0,0,TOTAL):0,
+             playing:true, dragging:false};
+if(qs.get("pause")==="1") state.playing=false;
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.06,(now-last)/1000); last=now;
+  if(state.playing && !state.dragging){
+    // 首帧的 rAF 时间戳可能早于 0，dt 会把时间拉到负数；t<0 时每段渲染都无定义
+    state.t = Math.max(0, state.t + dt);
+    if(state.t>TOTAL){state.t=TOTAL;state.playing=false;}
+  }
+  render(state.t);
+  requestAnimationFrame(loop);
+}
+
+/* ---------- seeking ---------- */
+const frameEl=document.getElementById("frame");
+const scrubEl=document.getElementById("scrub");
+function timeFromX(clientX){
+  const r=barEl.getBoundingClientRect();
+  const p=clamp((clientX-r.left)/Math.max(r.width,1),0,1);
+  return p*TOTAL;
+}
+function chapterAt(t){
+  let i=0;
+  for(let k=0;k<SEG.length;k++) if(t>=SEG[k].t0) i=k;
+  return i;
+}
+function showScrub(clientX){
+  const fr=frameEl.getBoundingClientRect();
+  const br=barEl.getBoundingClientRect();
+  const idx=chapterAt(state.t);
+  scrubEl.textContent=fmt(state.t)+" · "+pad2(idx+1)+" "+SEG[idx].cn;
+  scrubEl.style.left=clamp(clientX-fr.left,44,fr.width-44)+"px";
+  scrubEl.style.top=Math.max(10,br.top-fr.top-38)+"px";
+  scrubEl.classList.add("on");
+}
+function applySeek(t){
+  state.t=clamp(t,0,TOTAL);
+  render(state.t);
+  barEl.setAttribute("aria-valuenow",state.t.toFixed(2));
+}
+function seekBy(d){
+  applySeek(state.t+d);
+  last=performance.now();
+}
+
+/* pointer / touch drag */
+let dragPid=null, dragWasPlaying=false;
+function onDown(e){
+  if(e.pointerType==="mouse" && e.button!==0) return;
+  e.preventDefault();
+  dragPid=e.pointerId;
+  dragWasPlaying=state.playing;
+  state.dragging=true;
+  state.playing=false;
+  barEl.classList.add("drag");
+  try{barEl.setPointerCapture(e.pointerId);}catch(err){}
+  applySeek(timeFromX(e.clientX));
+  showScrub(e.clientX);
+}
+function onMove(e){
+  if(!state.dragging || e.pointerId!==dragPid) return;
+  e.preventDefault();
+  applySeek(timeFromX(e.clientX));
+  showScrub(e.clientX);
+}
+function onUp(e){
+  if(!state.dragging) return;
+  if(dragPid!==null && e.pointerId!==undefined && e.pointerId!==dragPid) return;
+  state.dragging=false;
+  dragPid=null;
+  barEl.classList.remove("drag");
+  scrubEl.classList.remove("on");
+  last=performance.now();
+  state.playing=dragWasPlaying && state.t<TOTAL;
+}
+barEl.addEventListener("pointerdown",onDown);
+barEl.addEventListener("pointermove",onMove);
+barEl.addEventListener("pointerup",onUp);
+barEl.addEventListener("pointercancel",onUp);
+barEl.addEventListener("lostpointercapture",onUp);
+
+render(state.t);
+requestAnimationFrame(loop);
+
+window.addEventListener("keydown",e=>{
+  if(e.code==="Space"){e.preventDefault();state.playing=!state.playing;last=performance.now();return;}
+  if(e.key==="r"||e.key==="R"){applySeek(0);state.playing=true;last=performance.now();return;}
+  if(e.key==="c"||e.key==="C"){
+    const n=SEG.find(s=>s.t0>state.t+0.3);
+    applySeek(n?n.t0:0);
+    last=performance.now();
+    return;
+  }
+  if(e.key==="ArrowLeft"||e.key==="ArrowRight"){
+    e.preventDefault();
+    const step=e.shiftKey?5:1;
+    seekBy(e.key==="ArrowLeft"?-step:step);
+  }
+});
+window.PELICAN={render:(t)=>{applySeek(t);},state,SEG,TRANS,TOTAL,
+  seek:applySeek, timeFromX};
+})();
+</script>
+</body>
+</html>

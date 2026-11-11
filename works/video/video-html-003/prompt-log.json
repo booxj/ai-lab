@@ -1,0 +1,65 @@
+{
+  "workId": "video-html-003",
+  "note": "seq 1 为用户最初的需求原话；seq 2–4 为成片过程中真实发生的三次修订，按时间排序。源项目会话只保留了任务摘要、未留逐字对话，故这三条 text 采用归档时用户对修订的表述（爪子与踏板的 IK 重做 / 模型署名从片尾改为 HUD 常驻 / 进度条改为可拖拽），intent 与 note 记录当时的实际改动。",
+  "log": [
+    {
+      "seq": 1,
+      "at": "2026-11-08T21:59+08:00",
+      "kind": "initial",
+      "text": "使用svg从66个视频风格随机挑6个生成鹈鹕骑自行车的视频，并保证剧情连续",
+      "effectivePrompt": "使用svg从66个视频风格随机挑6个生成鹈鹕骑自行车的视频，并保证剧情连续",
+      "intent": "从 66 套视觉风格里随机取 6 套，做一支剧情连贯、纯 SVG 绘制的鹈鹕骑自行车短片",
+      "note": "初次抽到 city-symphony，因不适合角色动画剔除后补入 art-deco；最终六段为 one-line / watercolor / risograph / chalkboard / engraving / art-deco，全片 104 s、五处转场。",
+      "affects": [
+        "copy",
+        "duration",
+        "style"
+      ],
+      "supersedes": null,
+      "status": "applied"
+    },
+    {
+      "seq": 2,
+      "at": "2026-11-08T22:06+08:00",
+      "kind": "revision",
+      "text": "爪子与踏板的 IK 重做",
+      "effectivePrompt": "使用svg从66个视频风格随机挑6个生成鹈鹕骑自行车的视频，并保证剧情连续",
+      "intent": "脚与踏板位置不一致：踏板改为曲柄的兄弟节点避免二次旋转，两段式 IK 把踝关节锚定在踏板轴心、两连杆解析解求膝关节，脚掌朝向随曲柄角变化（下死点脚跟下沉）",
+      "note": "逐帧测量六段共 72 帧，爪子与踏板中心最大偏差 0.64 px、平均 0.32 px。",
+      "affects": [
+        "animation"
+      ],
+      "supersedes": null,
+      "status": "applied"
+    },
+    {
+      "seq": 3,
+      "at": "2026-11-08T22:06+08:00",
+      "kind": "revision",
+      "text": "模型署名从片尾改为 HUD 常驻",
+      "effectivePrompt": "使用svg从66个视频风格随机挑6个生成鹈鹕骑自行车的视频，并保证剧情连续",
+      "intent": "署名「画面与代码 · DeepSeek-V4.1-Flash」改为 HUD 右下常驻，并保留在片尾卡；深色胶囊底加描边，保证六种配色下都清晰",
+      "note": "与 IK 修订同一轮提出；片尾卡署名不撤，两处同时在。",
+      "affects": [
+        "layout",
+        "copy"
+      ],
+      "supersedes": null,
+      "status": "applied"
+    },
+    {
+      "seq": 4,
+      "at": "2026-11-08T22:35+08:00",
+      "kind": "revision",
+      "text": "进度条改为可拖拽",
+      "effectivePrompt": "使用svg从66个视频风格随机挑6个生成鹈鹕骑自行车的视频，并保证剧情连续",
+      "intent": "进度条基于 pointer events 支持拖拽、点击跳转与触屏；键盘 ←→ ±1 s、Shift+←→ ±5 s；拖动时置 dragging 标志暂停自动推进，松手从新位置续播，并显示时码与段落预览气泡",
+      "note": "对六段中点与转场窗口逐点实测落点；时间轴与画面内容未改动。",
+      "affects": [
+        "interaction"
+      ],
+      "supersedes": null,
+      "status": "applied"
+    }
+  ]
+}

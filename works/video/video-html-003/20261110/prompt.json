@@ -1,0 +1,17 @@
+{
+  "version": "20261110",
+  "at": "2026-11-10T16:51+08:00",
+  "title": "六段风格成片",
+  "summary": "104 秒单文件 SVG 动画：一笔画 / 水彩 / 孔版印刷 / 黑板粉笔 / 铜版画 / 装饰艺术六段风格、五处转场；指针与键盘均可拖拽定位，空格暂停、R 重播、C 跳章。",
+  "promptSummary": "66 种风格随机取 6 种，鹈鹕骑自行车，六段风格 104 秒剧情连贯",
+  "duration": "1:44",
+  "effectivePrompt": "使用svg从66个视频风格随机挑6个生成鹈鹕骑自行车的视频，并保证剧情连续",
+  "note": "自 temp_20261106_04/pelican-svg/pelican-rider.html 原样收档（仅做首帧负时间防护：state.t = Math.max(0, state.t + dt)），16:9 / 1920×1080 / 104 s；单文件无 three、无 CDN、无外部请求、无视频文件。",
+  "promptSeqs": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "status": "final"
+}

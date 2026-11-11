@@ -47,7 +47,7 @@
         <svg id="playIcon" viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z"/></svg>
       </button>
       <div id="track"><div id="rail"></div><div id="fill"></div><div id="knob"></div></div>
-      <div id="time">0:00 / 1:58</div>
+      <div id="time">0:00 / 2:22</div>
       <button class="btn" id="mute" aria-label="静音">
         <svg id="muteIcon" viewBox="0 0 16 16"><path d="M8 2.2 4.6 5H2v6h2.6L8 13.8V2.2z"/><path d="M10.6 5.4a3.6 3.6 0 0 1 0 5.2l1 1a5 5 0 0 0 0-7.2z"/></svg>
       </button>
@@ -115,7 +115,7 @@ function pointAt(R, s) {
 }
 
 /* ============================ 时间轴 ============================ */
-const INTRO = 6.6, RIN = 2.2, DWELL = 4.2, BACK = 3.0, OUTRO = 11.5, TARGET = 116;
+const INTRO = 6.6, RIN = 2.2, DWELL = 6.6, BACK = 3.0, OUTRO = 11.5, TARGET = 142.4;
 const legTrue = [];
 for (const R of ROUTES) {
   let prev = 0;
@@ -1001,10 +1001,11 @@ function seek(t) {
 }
 function loop(ts) {
   requestAnimationFrame(loop);
-  const dt = Math.max(0, Math.min(0.06, (ts - lastTs) / 1000 || 0)); // rAF 首帧时间戳可能早于 play() 里的 performance.now()，钳掉负值
+  const dt = Math.min(0.06, (ts - lastTs) / 1000 || 0);
   lastTs = ts;
   if (playing) {
-    T += dt;
+    // 首帧的 rAF 时间戳可能早于 0，dt 会把 T 拉到负数；进度状态在 t<0 时无定义
+    T = Math.max(0, T + dt);
     if (T >= DUR) { T = DUR; playing = false; Music.stop(); syncUI(); }
     render(); syncUI();
   }
